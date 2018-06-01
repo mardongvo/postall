@@ -11,4 +11,9 @@ PROXY_URL="..." #http proxy, set None for no-proxy
 ACESS_TOKEN	= "....."
 LOGIN_PASSWORD	= to_base64("login:pass")
 POST_SERVER = "https://otpravka-api.pochta.ru"
-POSTOFFICE_CODE = "000000"
+
+#значения по умолчанию для заказа
+DEFAULT_POSTOFFICE_CODE = "000000"
+DEFAULT_ENVELOPE_TYPE = "DL"
+DEFAULT_PAYMENT_METHOD = "STAMP"
+DEFAULT_MAIL_CATEGORY = "ORDERED" #https://otpravka.pochta.ru/specification#/enums-base-mail-category

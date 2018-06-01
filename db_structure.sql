@@ -13,8 +13,8 @@ create index p1 on POSTINDEX(postindex);
 create table if not exists REESTR(
 id serial primary key,
 ext_id integer default 0, --внешний id (сайта)
+ext_date date not null, --внешняя дата отправки
 rdate date not null,
-rmonth integer not null,
 locked integer default 0,
 commentary varchar(100) default '' --примечание (ФИО)
 );
