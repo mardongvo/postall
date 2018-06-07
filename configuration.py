@@ -12,6 +12,9 @@ ACESS_TOKEN	= "....."
 LOGIN_PASSWORD	= to_base64("login:pass")
 POST_SERVER = "https://otpravka-api.pochta.ru"
 
+#нижеследующие словари определяют структуру таблиц БД
+#учитывайте это при изменении класса DBStorage
+
 #https://otpravka.pochta.ru/specification#/orders-creating_order
 #также определяет структуру для БД
 LETTER_DEFAULT = {
@@ -68,18 +71,34 @@ LETTER_CONSTANT_FIELDS = {
 #дополнительные поля для БД
 LETTER_DB_FIELDS = {
 	"letter_id": "sequence", #=integer autoincrement, serial
-	"reestr_id": "integer",#
-	"id":"integer", #идентификатор с сайта
+	"reestr_id": 0,#
+	"id":0, #идентификатор с сайта
 	"barcode":"text", #ШПИ
-	"mass_pages", #количество страниц
+	"mass_pages": 0, #количество страниц, используется для вычисления массы
 	"user_id": "text", #идентификатор пользователя
+	"db_locked": 0, #заблокировано для изменений, возможно только присвоение barcode или разблокировка при удалении с 
 }
 
 #поля для реестра
 REESTR_DB_FIELDS = {
 	"reestr_id": "sequence", #=integer autoincrement, serial
-	"create_date": "date", #
-	"sending_date": "date" #sending-date (Опционально) Дата сдачи в почтовое отделение (yyyy-MM-dd)
-    "with-simple-notice": "boolean", #Отметка 'С простым уведомлением' (Опционально)
+	"db_create_date": "date", #
+	"list-number-date": "date", #aka sending-date (Опционально) Дата сдачи в почтовое отделение (yyyy-MM-dd)
+    "with-simple-notice": False, #Отметка 'С простым уведомлением' (Опционально)
 	"user_id": "text", #идентификатор пользователя
+	"db_locked": 0, #заблокировано для изменений
+}
+
+#контрагенты - основа
+#дополнительно добавляются поля из LETTER_DEFAULTS, заканчивающиеся на -to
+CONTRAGENT_DB_FIELDS = {
+	"srctype": 0, #тип источника
+	"srcid": "", #идентификатор в источнике
+}
+
+#пользователи
+USER_DB_FIELDS = {
+	"username": "text",
+	"fio": "text",
+	"admin": 0,
 }
