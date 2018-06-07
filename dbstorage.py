@@ -3,20 +3,23 @@
 import psycopg2
 import configuration as defconf
 
+def fix_json_field_name(field_name):
+	return field_name.replace("-","_")
+
 class DBStorage:
 	def __init__(self):
 		self.conn = None
 	def connect(self, connstring=defconf.DB_CONNECTION):
 		return True, err
 	def get_user_info(self, userid):
-		return {"fio":, "admin":False}
+		return {"fio":"", "admin":False}
 	def get_contragent_info(self, srctype, srcid):
 		return {}, err
 	def get_reestr_list(self, fromdate, todate):
 		return [], err
-	def add_reestr(self, userid, ...):
+	def add_reestr(self, userid, reestr_info):
 		return id, err
-	def add_letter(self, reestr_id, ...):
+	def add_letter(self, reestr_id, letter_info):
 		return id, err
 	def modify_letter(self, letter_id, letter_info):
 		return True, err
