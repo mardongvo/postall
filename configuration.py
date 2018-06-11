@@ -73,9 +73,9 @@ LETTER_DB_FIELDS = {
 	"db_letter_id": "sequence", #=integer autoincrement, serial
 	"db_reestr_id": 0,#
 	"id":0, #идентификатор с сайта
-	"barcode":"text", #ШПИ
+	"barcode":"", #ШПИ
 	"db_mass_pages": 0, #количество страниц, используется для вычисления массы
-	"db_user_id": "text", #идентификатор пользователя
+	"db_user_id": "", #идентификатор пользователя
 	"db_locked": 0, #заблокировано для изменений, возможно только присвоение barcode или разблокировка при удалении с 
 }
 
@@ -86,9 +86,12 @@ REESTR_DB_FIELDS = {
 	"list-number-date": "date", #aka sending-date (Опционально) Дата сдачи в почтовое отделение (yyyy-MM-dd)
 	"batch-name": "", #Номер партии
     "with-simple-notice": False, #Отметка 'С простым уведомлением' (Опционально)
-	"db_user_id": "text", #идентификатор пользователя
+	"db_user_id": "", #идентификатор пользователя
 	"db_locked": 0, #заблокировано для изменений
 }
+
+LETTER_KEY_FIELD = "db_letter_id"
+REESTR_KEY_FIELD = "db_reestr_id"
 
 #контрагенты - основа
 #дополнительно добавляются поля из LETTER_DEFAULTS, заканчивающиеся на -to
@@ -99,7 +102,7 @@ CONTRAGENT_DB_FIELDS = {
 
 #пользователи
 USER_DB_FIELDS = {
-	"username": "text",
-	"fio": "text",
+	"db_user_id": "",
+	"fio": "",
 	"admin": 0,
 }
