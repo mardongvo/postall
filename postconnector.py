@@ -3,6 +3,7 @@
 import requests
 import json
 import configuration as defconf
+from datetime import datetime
 
 def extract_errors(obj):
 	"""Извлечение информации об ошибках из ответа json
@@ -21,6 +22,8 @@ def extract_errors(obj):
 	return res
 
 class PostConnector:
+	"""Класс реализации REST запросов на сервер почты
+	"""
 	def __init__(self, connobj):
 		"""Инициализация
 		connobj - объект requests.Session для обмена по http протоколу 
@@ -99,7 +102,7 @@ class PostConnector:
 		backlog_ids -- массив идентификаторов заказов
 		"""
 		path = "/1.0/user/shipment"
-		if send_date:
+		if isinstance(send_date, datetime):
 			path = path + "?sending-date=" + send_date.strftime("%Y-%m-%d")
 		errors = {}
 		batch_info = {}
@@ -129,9 +132,9 @@ class PostConnector:
 		"""Изменение дня отправки в почтовое отделение
 		send_date -- Дата сдачи в почтовое отделение, объект datetime (yyyy-MM-dd)
 		"""
-		path = "/1.0/batch/%s/sending/%d/%d/%d" % (batch_name, send_date.year, send_date.month, send_date.day)
 		error = ""
 		try:
+			path = "/1.0/batch/%s/sending/%d/%d/%d" % (batch_name, send_date.year, send_date.month, send_date.day)
 			response = self.httpconn.post(self.post_server+path, headers=self.request_headers, proxies=self.proxy)
 			if response.status_code <> requests.codes.OK:
 				raise Exception("HTTP code: "+str(response.status_code))
