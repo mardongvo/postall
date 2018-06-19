@@ -28,14 +28,13 @@ LETTER_DEFAULT = {
     #  "length": 0,
     #  "width": 0
     #},
-    "given-name": "", #Имя получателя
+    #"given-name": "", #Имя получателя
     #"hotel-to": "", #Название гостиницы (Опционально)
     "house-to": "", #Часть адреса: Номер здания
     "index-to": 0, #Почтовый индекс Целое число
     #"insr-value": 0, #Сумма объявленной ценности (копейки),  (Опционально)
     #"letter-to": "string", #Часть здания: Литера (Опционально)
     #"location-to": "string", #Микрорайон (Опционально)
-    "mail-category": "ORDERED", #Категория РПО: SIMPLE, ORDERED, ORDINARY, WITH_DECLARED_VALUE, WITH_DECLARED_VALUE_AND_CASH_ON_DELIVERY, COMBINED, https://otpravka.pochta.ru/specification#/enums-base-mail-category
     "mass": 0, #Вес РПО (в граммах)
     #"middle-name": "string", #Отчество получателя (Опционально)
     #"num-address-type-to": "string", #Номер для а/я, войсковая часть, войсковая часть ЮЯ, полевая почта (Опционально)
@@ -48,7 +47,7 @@ LETTER_DEFAULT = {
     #"slash-to": "string", #Часть здания: Дробь (Опционально)
     #"sms-notice-recipient": 0, #Признак услуги SMS уведомления (Опционально)
     "street-to": "", #Часть адреса: Улица
-    "surname": "", #Фамилия получателя
+    #"surname": "", #Фамилия получателя
     #"tel-address": 0, #Телефон получателя (может быть обязательным для некоторых типов отправлений) (Опционально)
     #"with-order-of-notice": true, #Отметка 'С заказным уведомлением' true или false (Опционально)
     "with-simple-notice": True, #Отметка 'С простым уведомлением' (Опционально)
@@ -66,6 +65,7 @@ LETTER_CONSTANT_FIELDS = {
     "manual-address-input": True, #Отметка 'Ручной ввод адреса'  true или false
     "payment-method": "STAMP", #Способ оплаты  (Опционально) CASHLESS,  STAMP, FRANKING https://otpravka.pochta.ru/specification#/enums-payment-methods
     "postoffice-code": "", #Индекс места приема (Опционально)
+    "mail-category": "ORDERED", #Категория РПО: SIMPLE, ORDERED, ORDINARY, WITH_DECLARED_VALUE, WITH_DECLARED_VALUE_AND_CASH_ON_DELIVERY, COMBINED, https://otpravka.pochta.ru/specification#/enums-base-mail-category
 }
 
 #дополнительные поля для БД
@@ -77,6 +77,7 @@ LETTER_DB_FIELDS = {
 	"db_mass_pages": 0, #количество страниц, используется для вычисления массы
 	"db_user_id": "", #идентификатор пользователя
 	"db_locked": 0, #заблокировано для изменений, возможно только присвоение barcode или разблокировка при удалении с 
+	"db_last_error": "", #последняя ошибка
 }
 
 #поля для реестра
@@ -88,6 +89,8 @@ REESTR_DB_FIELDS = {
     "with-simple-notice": False, #Отметка 'С простым уведомлением' (Опционально)
 	"db_user_id": "", #идентификатор пользователя
 	"db_locked": 0, #заблокировано для изменений
+	"db_comment":"", #комментарий
+	"db_letter_count": 0 #количество писем TODO: оставить или заменить динамикой?
 }
 
 LETTER_KEY_FIELD = "db_letter_id"
@@ -105,4 +108,12 @@ USER_DB_FIELDS = {
 	"db_user_id": "",
 	"fio": "",
 	"admin": 0,
+}
+
+#информация о своей организации, используется при печати конвертов
+FROM_INFO = {
+	"name":"", #наименование своей организации
+	"addr": "",  # адрес своей организации
+	"index": "",  # индекс адреса своей организации
+	"fio": "",  # ФИО ответственного
 }
