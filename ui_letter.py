@@ -62,14 +62,13 @@ class UILetter(tk.Frame):
 			gridcol[i] = 2
 		for c in self.GUI_DEF:
 			col = gridcol[c['row']]
-			if c['key'] == 'barcode':
+			if c['key'] == 'barcode': #исключение для номера отправления
 				col = 0
 			L1 = tk.Label(self, text = c['title'])
 			L1.grid({"column":col, "row":c['row'], "sticky":"NSW"})
 			L1["width"] = -1
 			L1["bg"] = COLORS[bgcolor][0]
 			ent = tk.Entry(self)
-			#ent.insert("end", data[c['name']])
 			ent["background"] = COLORS[bgcolor][0]
 			ent["readonlybackground"] = COLORS[bgcolor][1]
 			if not c['edit']:
@@ -79,9 +78,9 @@ class UILetter(tk.Frame):
 				ent["width"] = c['maxsize']
 			else:
 				ent["width"] = DEFAULT_WIDTH
-			if c['key']=='index-to':
+			if c['key']=='index-to': #спец обработка измененеия индекса
 				ent.bind("<KeyRelease>", self.onIndexUpdate)
-			elif c['key']=='db_mass_pages':
+			elif c['key']=='db_mass_pages': #спец обработка измененеия количества листов
 				ent.bind("<KeyRelease>", self.onMasspEdit)
 			else:
 				ent.bind("<KeyRelease>", self.onEntryUpdate)
@@ -98,18 +97,22 @@ class UILetter(tk.Frame):
 				self.massp_widget = ent
 			if c['key'] == 'mass':
 				self.mass_widget = ent
+		#кнопки
 		self.btn_save = tk.Button(self)
 		self.btn_save["text"] = u"Сохранить"
 		self.btn_save["command"] = self.onClickSave
 		self.btn_save.grid({"column":max(gridcol.values())+1, "row":0, "sticky":"NSEW"})
+		#
 		self.btn_print = tk.Button(self)
 		self.btn_print["text"] = u"Конверт"
 		self.btn_print["command"] = self.onClickPrint
 		self.btn_print.grid({"column":max(gridcol.values())+2, "row":0, "sticky":"NSEW"})
+		#
 		self.btn_delete = tk.Button(self)
 		self.btn_delete["text"] = u"Удалить"
 		self.btn_delete["command"] = self.onClickDelete
 		self.btn_delete.grid({"column":max(gridcol.values())+1, "row":1, "sticky":"NSEW"})
+		#
 		self.btn_barcode = tk.Button(self)
 		self.btn_barcode["text"] = u"Получить номер"
 		self.btn_barcode["command"] = self.onClickBarcode
@@ -192,8 +195,6 @@ class UILetter(tk.Frame):
 		except:
 			pages_count = 1
 		mass = pages_to_mass(pages_count)
-		print((event.keycode,event.state))
-		print(self.mass_widget)
 		self.mass_widget.delete(0,"end")
 		self.mass_widget.insert("end", "%d" % (mass,))
 		self.btn_save["foreground"] = "#FF0000"
@@ -209,9 +210,11 @@ class UILetter(tk.Frame):
 				if isinstance(v, int):
 					v = str(v)
 				c["widget"].insert("end", v)
+			if not c["edit"]:
+				c["widget"].config(state='readonly')
 		self.set_lock(self.letter_info["db_locked"])
 	def set_lock(self, lock_state):
-		""" Установить доступность кнопок согласно блокировке письма
+		""" Установить доступность элементов согласно статусу блокировки письма
 		"""
 		self.btn_print["state"] = "disabled"
 		self.btn_save["state"] = "disabled"
@@ -231,7 +234,7 @@ class UILetter(tk.Frame):
 			self.btn_print["state"] = "enabled"
 			self.btn_barcode["text"] = u'Удалить номер'
 	def sync(self):
-		""" Перенести данные из формы в letter_info
+		""" Перенсит данные из формы в letter_info
 		"""
 		for c in self.GUI_DEF:
 			if c["key"] in self.letter_info:
