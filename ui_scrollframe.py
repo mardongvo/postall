@@ -8,19 +8,23 @@ class UIScrollFrame(tk.Frame):
 	"""
 	def __init__(self, master):
 		tk.Frame.__init__(self, master)
+		self.grid_rowconfigure(0, weight=1)
+		self.grid_columnconfigure(0, weight=1)
 		self.canvas = tk.Canvas(self)
 		#вертикальный
-		vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-		self.canvas.configure(yscrollcommand=vsb.set)
-		vsb.pack(side="right", fill="y", expand=False)
+		self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+		self.vsb.grid(row=0, column=1, sticky="NS")
 		#горизонтальный
-		hsb = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-		self.canvas.configure(xscrollcommand=hsb.set)
-		hsb.pack(side="bottom", fill="x", expand=False)
+		self.hsb = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
+		self.hsb.grid(row=1, column=0, sticky="EW")
 		#
-		self.canvas.pack(side="left", fill="both", expand=True)
+		self.canvas.configure(yscrollcommand=self.vsb.set)
+		self.canvas.configure(xscrollcommand=self.hsb.set)
+		self.canvas.grid(row=0, column=0, sticky="NSWE")
+		self.frame = self.canvas
 		self.frame = tk.Frame(self.canvas)
-		self.frame.pack(side="left", fill="both", expand=True)
+		self.frame.grid(row=0, column=0, sticky="NSWE")
+		self.canvas.create_window(1, 1, window=self.frame, anchor="nw")
 		self.frame.bind("<Configure>", self.onFrameConfigure)
 	def onFrameConfigure(self, event):
-		self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+		self.canvas.configure(scrollregion=(0,0,event.width,event.height))
