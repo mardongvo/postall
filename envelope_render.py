@@ -43,8 +43,8 @@ def render_DL(canv, letter_info, from_info):
 	from_index = from_info["index"]
 	from_fio = from_info["fio"]
 	dst_name = letter_info["recipient-name"]
-	dst_addr = ", ".join(map(lambda k: letter_info[k] if k in letter_info else "",
-		["region-to", "area-to", "place-to", "location-to", "street-to", "hotel-to", "house-to", "slash-to", "letter-to", "building-to", "corpus-to", "room-to"]
+	dst_addr = ", ".join(map(lambda k: letter_info[k],
+		filter(lambda a: a in letter_info,["region-to", "area-to", "place-to", "location-to", "street-to", "hotel-to", "house-to", "slash-to", "letter-to", "building-to", "corpus-to", "room-to"])
 	))
 	dst_index = "%06d" % letter_info["index-to"]
 	
