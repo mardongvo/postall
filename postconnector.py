@@ -29,7 +29,7 @@ class PostConnector:
 		connobj - объект requests.Session для обмена по http протоколу 
 		"""
 		self.httpconn = connobj
-		self.proxy = {}
+		self.proxy = None
 		self.access_token = ""
 		self.login_password = ""
 	def set_parameters(self, post_server=defconf.POST_SERVER, token=defconf.ACESS_TOKEN, login_password=defconf.LOGIN_PASSWORD, proxyurl=defconf.PROXY_URL):
@@ -40,7 +40,7 @@ class PostConnector:
 		login_password -- Ключ авторизации пользователя
 		proxyurl -- HTTP прокси в стандратной для requests нотации
 		"""
-		self.proxy = {"http": proxyurl, "https": proxyurl} if proxyurl>"" else {}
+		self.proxy = {"http": proxyurl, "https": proxyurl} if proxyurl>"" else None
 		self.access_token = token
 		self.login_password = login_password
 		self.post_server = post_server
@@ -61,7 +61,7 @@ class PostConnector:
 		idd = 0
 		try:
 			response = self.httpconn.put(self.post_server+path, headers=self.request_headers, data=json.dumps([letter_info]), proxies=self.proxy)
-			if response.status_code <> requests.codes.OK:
+			if response.status_code != requests.codes.OK:
 				raise Exception("HTTP code: "+str(response.status_code))
 			obj = json.loads(response.text)
 			if ("result-ids" in obj) and len(obj["result-ids"]) > 0:
@@ -70,6 +70,23 @@ class PostConnector:
 		except Exception as e:
 			error += str(e)
 		return idd, error
+	def get_backlog(self, backlog_id):
+		""" Получение информации по заказу
+		https://otpravka.pochta.ru/specification#/orders-search_order_byid
+		backlog_id - идентификатор заказа
+		"""
+		error = ""
+		obj = {}
+		try:
+			path = "/1.0/shipment/%d" % (backlog_id,)
+			response = self.httpconn.get(self.post_server+path, headers=self.request_headers, proxies=self.proxy)
+			if response.status_code != requests.codes.OK:
+				raise Exception("HTTP code: "+str(response.status_code))
+			obj = json.loads(response.text)
+			error += extract_errors(obj)
+		except Exception as e:
+			error += str(e)
+		return obj, error
 	def add_backlogs(self, letter_info_array):
 		"""Добавление нескольких заказов. Итератор
 		Предполагается, что в одном реестре может быть сколь угодно много писем,
@@ -88,7 +105,7 @@ class PostConnector:
 		error = ""
 		try:
 			response = self.httpconn.post(self.post_server+path, headers=self.request_headers, data=json.dumps([backlog_id]), proxies=self.proxy)
-			if response.status_code <> requests.codes.OK:
+			if response.status_code != requests.codes.OK:
 				raise Exception("HTTP code: "+str(response.status_code))
 			obj = json.loads(response.text)
 			error += extract_errors(obj)
@@ -113,7 +130,7 @@ class PostConnector:
 		bid = backlog_ids[0]
 		try:
 			response = self.httpconn.post(self.post_server+path, headers=self.request_headers, data=json.dumps([bid]), proxies=self.proxy)
-			if response.status_code <> requests.codes.OK:
+			if response.status_code != requests.codes.OK:
 				raise Exception("HTTP code: "+str(response.status_code))
 			obj = json.loads(response.text)
 			if ("batches" in obj) and (len(obj["batches"])>0):
@@ -124,7 +141,7 @@ class PostConnector:
 		except Exception as e:
 			errors[bid] += str(e)
 		#2 добавление в существующую партию
-		if batch_name <> None:
+		if batch_name != None:
 			for bid in backlog_ids[1:]:
 				errors[bid] = self.add_backlog_to_batch(batch_name, bid)
 		return (batch_info, errors)
@@ -136,14 +153,14 @@ class PostConnector:
 		try:
 			path = "/1.0/batch/%s/sending/%d/%d/%d" % (batch_name, send_date.year, send_date.month, send_date.day)
 			response = self.httpconn.post(self.post_server+path, headers=self.request_headers, proxies=self.proxy)
-			if response.status_code <> requests.codes.OK:
+			if response.status_code != requests.codes.OK:
 				raise Exception("HTTP code: "+str(response.status_code))
 			obj = json.loads(response.text)
 			error += extract_errors(obj)
 		except Exception as e:
 			error += str(e)
 		return error
-	def remove_backlogs(self, backlog_ids):
+	def remove_backlogs_from_shipment(self, backlog_ids):
 		"""Удаление заказов из партии, итератор
 		backlog_ids -- массив идентификаторов заказов
 		"""
@@ -152,7 +169,24 @@ class PostConnector:
 			error = ""
 			try:
 				response = self.httpconn.delete(self.post_server+path, headers=self.request_headers, data=json.dumps([bid]), proxies=self.proxy)
-				if response.status_code <> requests.codes.OK:
+				if response.status_code != requests.codes.OK:
+					raise Exception("HTTP code: "+str(response.status_code))
+				else:
+					obj = json.loads(response.text)
+					error += extract_errors(obj)
+			except Exception as e:
+				error += str(e)
+			yield bid, error
+	def remove_backlogs(self, backlog_ids):
+		"""Удаление новых заказов
+		backlog_ids -- массив идентификаторов заказов
+		"""
+		path = "/1.0/backlog"
+		for bid in backlog_ids:
+			error = ""
+			try:
+				response = self.httpconn.delete(self.post_server+path, headers=self.request_headers, data=json.dumps([bid]), proxies=self.proxy)
+				if response.status_code != requests.codes.OK:
 					raise Exception("HTTP code: "+str(response.status_code))
 				else:
 					obj = json.loads(response.text)
