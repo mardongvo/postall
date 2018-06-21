@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import Tkinter as tk
-from dbstorage import LOCK_STATE_FREE, LOCK_STATE_BACKLOG, LOCK_STATE_BATCH
+from dbstorage import LOCK_STATE_FREE, LOCK_STATE_BACKLOG, LOCK_STATE_BATCH, LOCK_STATE_FINAL
 import copy
 
 BG_COLOR = "FFFFFF"
@@ -23,23 +23,22 @@ class UILetter(tk.Frame):
 	"""UI класс представления письма в виде горизонтальной области в несколько строк
 	"""
 	
-	GUI_DEF = [
-		{'key': 'barcode', 'title': u'Номер', 'type': 'text', 'edit': False, 'maxsize': 14, 'row': 0},
-		{'key': 'index-to', 'title': u'Индекс', 'type': 'integer', 'edit': True, 'maxsize': 6, 'row': 0},
-		{'key': 'region-to', 'title': u'Обл.', 'type': 'text', 'edit': True, 'maxsize': 20, 'row': 0},
-		{'key': 'place-to', 'title': u'Город', 'type': 'text', 'edit': True, 'maxsize': 15, 'row': 0},
-		{'key': 'street-to', 'title': u'Улица', 'type': 'text', 'edit': True, 'maxsize': 20, 'row': 0},
-		{'key': 'house-to', 'title': u'Дом', 'type': 'text', 'edit': True, 'maxsize': 6, 'row': 0},
-		{'key': 'room-to', 'title': u'Кв./офис', 'type': 'text', 'edit': True, 'maxsize': 6, 'row': 0},
-		{'key': 'recipient-name', 'title': u'Адресат', 'type': 'text', 'edit': True, 'maxsize': 20, 'row': 1},
-		{'key': 'mass', 'title': u'Масса', 'type': 'integer', 'edit': True, 'maxsize': 6, 'row': 1},
-		{'key': 'db_mass_pages', 'title': u'Листов', 'type': 'integer', 'edit': True, 'maxsize': 6, 'row': 1},
-		{'key': 'comment', 'title': u'Содерж.', 'type': 'text', 'edit': True, 'maxsize': 20, 'row': 1},
-		{'key': 'db_last_error', 'title': u'Ошибка', 'type': 'text', 'edit': False, 'maxsize': 30, 'row': 2},
-		{'key': 'db_user_id', 'title': u'Польз.', 'type': 'text', 'edit': False, 'maxsize': 10, 'row': 2},
-	]
-	
 	def __init__(self, master, bgcolor=0, action_callback=None):
+		self.GUI_DEF = [
+			{'key': 'barcode', 'title': u'Номер', 'type': 'text', 'edit': False, 'maxsize': 14, 'row': 0},
+			{'key': 'index-to', 'title': u'Индекс', 'type': 'integer', 'edit': True, 'maxsize': 6, 'row': 0},
+			{'key': 'region-to', 'title': u'Обл.', 'type': 'text', 'edit': True, 'maxsize': 20, 'row': 0},
+			{'key': 'place-to', 'title': u'Город', 'type': 'text', 'edit': True, 'maxsize': 15, 'row': 0},
+			{'key': 'street-to', 'title': u'Улица', 'type': 'text', 'edit': True, 'maxsize': 20, 'row': 0},
+			{'key': 'house-to', 'title': u'Дом', 'type': 'text', 'edit': True, 'maxsize': 6, 'row': 0},
+			{'key': 'room-to', 'title': u'Кв./офис', 'type': 'text', 'edit': True, 'maxsize': 6, 'row': 0},
+			{'key': 'recipient-name', 'title': u'Адресат', 'type': 'text', 'edit': True, 'maxsize': 20, 'row': 1},
+			{'key': 'mass', 'title': u'Масса', 'type': 'integer', 'edit': True, 'maxsize': 6, 'row': 1},
+			{'key': 'db_mass_pages', 'title': u'Листов', 'type': 'integer', 'edit': True, 'maxsize': 6, 'row': 1},
+			{'key': 'comment', 'title': u'Содерж.', 'type': 'text', 'edit': True, 'maxsize': 20, 'row': 1},
+			{'key': 'db_last_error', 'title': u'Ошибка', 'type': 'text', 'edit': False, 'maxsize': 30, 'row': 2},
+			{'key': 'db_user_id', 'title': u'Польз.', 'type': 'text', 'edit': False, 'maxsize': 10, 'row': 2},
+		]
 		self.letter_info = {}
 		self.action_callback = action_callback
 		#create widgets
@@ -223,16 +222,18 @@ class UILetter(tk.Frame):
 		for c in self.GUI_DEF:
 			c["widget"].config(state='readonly')
 		if lock_state == LOCK_STATE_FREE:
-			self.btn_save["state"] = "enabled"
-			self.btn_delete["state"] = "enabled"
+			self.btn_save["state"] = "normal"
+			self.btn_delete["state"] = "normal"
 			for c in self.GUI_DEF:
 				if c["edit"]:
 					c["widget"].config(state='normal')
 		if lock_state == LOCK_STATE_BACKLOG:
 			pass
 		if lock_state == LOCK_STATE_BATCH:
-			self.btn_print["state"] = "enabled"
+			self.btn_print["state"] = "normal"
 			self.btn_barcode["text"] = u'Удалить номер'
+		if lock_state == LOCK_STATE_FINAL:
+			pass
 	def sync(self):
 		""" Перенсит данные из формы в letter_info
 		"""
