@@ -111,11 +111,11 @@ class DBStorage:
 				res = {}
 				for i in range(len(data)):
 					fld = cur.description[i][0]
-					if filter_fields and fld in self.field2key:
-						res[self.field2key[fld]] = data[i]
+					if filter_fields and fld in self.field2key[tablename]:
+						res[self.field2key[tablename][fld]] = data[i]
 					else:
 						fldname = fld
-						if fld in self.field2key: fldname = self.field2key[fld]
+						if fld in self.field2key[tablename]: fldname = self.field2key[tablename][fld]
 						res[fldname] = data[i]
 				yield res, ""
 		except Exception as e:
@@ -156,6 +156,7 @@ class DBStorage:
 		:param reestr_id: integer - db_reestr_id
 		:return:
 		"""
+		#TODO: добавить проверку на количество писем
 		return self._run_sql(self._build_sql("REESTR_INFO", "DELETE", {"db_reestr_id":reestr_info["db_reestr_id"],"db_locked":LOCK_STATE_FREE}, "db_reestr_id"), False)
 	def sync_reestr(self, reestr_id):
 		""" Синхронизация полей реестра после изменения писем
@@ -178,6 +179,7 @@ class DBStorage:
 		:param letter_info: dict() - configuration.LETTER_DEFAULTS
 		:return: idd - integer, err - string
 		"""
+		#TODO: добавить проверку на статус реестра
 		res = self._run_sql(self._build_sql("LETTER_INFO", "INSERT", letter_info, "db_letter_id"), True)
 		self.sync_reestr(letter_info["db_reestr_id"])
 		return res
