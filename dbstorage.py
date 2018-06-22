@@ -134,14 +134,12 @@ class DBStorage:
 		if not(isinstance(fromdate, datetime) and isinstance(todate, datetime)):
 			return [], u"Даты отбора реестров не являются объектом datetime"
 		res = []
-		error = ""
 		for i in self._select_sql("REESTR_INFO", "select * from REESTR_INFO where db_create_date between %s and %s;" % (value2str(fromdate),value2str(todate))):
-				if i[1]=="":
-					res.append(i)
+				res.append(i)
 		return res
 	def get_reestr_info(self, reestr_id):
 		for i in self._select_sql("REESTR_INFO", self._build_sql("REESTR_INFO", "SELECT", {"db_reestr_id":reestr_id})):
-				return i
+			return i
 	def get_letter_info(self, letter_id):
 		for i in self._select_sql("LETTER_INFO", self._build_sql("LETTER_INFO", "SELECT", {"db_letter_id":letter_id})):
 			return i
@@ -152,14 +150,26 @@ class DBStorage:
 		:return: idd - integer, err - string
 		"""
 		return self._run_sql(self._build_sql("REESTR_INFO", "INSERT", reestr_info, "db_reestr_id"), True)
-	def delete_reestr(self, reestr_id):
+	def delete_reestr(self, reestr_info):
 		""" Удаление реестра
 		
 		:param reestr_id:
 		:return:
 		"""
-		return self._run_sql(self._build_sql("REESTR_INFO", "DELETE", {"db_reestr_id":reestr_id,"db_locked":LOCK_STATE_FREE}, "db_reestr_id"), False)
+		return self._run_sql(self._build_sql("REESTR_INFO", "DELETE", {"db_reestr_id":reestr_info["db_reestr_id"],"db_locked":LOCK_STATE_FREE}, "db_reestr_id"), False)
+	def sync_reestr(self, reestr_id):
+		""" Синхронизация полей реестра после изменения писем
+		
+		:param reestr_id:
+		:return:
+		"""
+		self._run_sql("with t as (select count(*) CNT from LETTER_INFO where db_reestr_id=%s) update REESTR_INFO set db_letter_count=t.CNT from t where db_reestr_id=%s" % (value2str(reestr_id),value2str(reestr_id)))
 	def modify_reestr(self, reestr_info):
+		""" Изменение реестра
+		
+		:param reestr_info:
+		:return:
+		"""
 		return self._run_sql(self._build_sql("REESTR_INFO", "UPDATE", reestr_info,
 							"db_reestr_id"), False)
 	def add_letter(self, letter_info):
@@ -168,26 +178,32 @@ class DBStorage:
 		:param letter_info: dict() - configuration.LETTER_DEFAULTS
 		:return: idd - integer, err - string
 		"""
-		return self._run_sql(self._build_sql("LETTER_INFO", "INSERT", letter_info, "db_letter_id"), True)
+		res = self._run_sql(self._build_sql("LETTER_INFO", "INSERT", letter_info, "db_letter_id"), True)
+		self.sync_reestr(letter_info["db_reestr_id"])
+		return res
 	def modify_letter(self, letter_info):
 		""" Изменение письма
 		
 		:param letter_info:
 		:return:
 		"""
-		return self._run_sql(self._build_sql("LETTER_INFO", "UPDATE", letter_info, "db_letter_id"), False)
-	def delete_letter(self, letter_id):
+		res = self._run_sql(self._build_sql("LETTER_INFO", "UPDATE", letter_info, "db_letter_id"), False)
+		self.sync_reestr(letter_info["db_reestr_id"])
+		return res
+	def delete_letter(self, letter_info):
 		""" Удаление письма, выполняется только для состояния LOCK_STATE_FREE
-		letter_id -- идентификатор письма db_letter_id
+		:param letter_info: dict() - configuration.LETTER_DEFAULTS
 		"""
-		return self._run_sql(self._build_sql("LETTER_INFO", "DELETE", {"db_letter_id":letter_id,"db_locked":LOCK_STATE_FREE}, "db_letter_id"), False)
-	def lock_letter(self, letter_id, state):
+		res = self._run_sql(self._build_sql("LETTER_INFO", "DELETE", {"db_letter_id":letter_info["db_letter_id"],"db_locked":LOCK_STATE_FREE}, "db_letter_id"), False)
+		self.sync_reestr(letter_info["db_reestr_id"])
+		return res
+	def lock_letter(self, letter_info, state):
 		""" Смена состояния блокировки письма
 		letter_id -- идентификатор письма db_letter_id
 		state -- LOCK_STATE_*
 		"""
 		return self._run_sql(
-			self._build_sql("LETTER_INFO", "UPDATE", {"db_letter_id": letter_id, "db_locked": state},
+			self._build_sql("LETTER_INFO", "UPDATE", {"db_letter_id": letter_info["db_letter_id"], "db_locked": state},
 							"db_letter_id"), False)
 	def lock_reestr(self, reestr_id, state):
 		return self._run_sql(
