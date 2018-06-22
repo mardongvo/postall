@@ -3,7 +3,7 @@
 import Tkinter as tk
 import copy
 from dbstorage import LOCK_STATE_FREE, LOCK_STATE_BACKLOG, LOCK_STATE_BATCH, LOCK_STATE_FINAL
-from datetime import datetime
+from datetime import datetime, date
 
 DEFAULT_WIDTH = 20
 
@@ -85,7 +85,7 @@ class UIReestrElement(tk.Frame):
 					v = u'Да' if v else u'Нет'
 				if isinstance(v, int):
 					v = str(v)
-				if isinstance(v, datetime):
+				if isinstance(v, datetime) or isinstance(v, date):
 					v = v.strftime("%d.%m.%Y")
 				c["widget"].insert("end", v)
 			if not c["edit"]:
@@ -112,7 +112,8 @@ class UIReestrElement(tk.Frame):
 			if self.user_ident.is_admin() == 1:
 				self.btn_lock["state"] = "normal"
 		if lock_state == LOCK_STATE_FINAL:
-			pass
+			self.btn_edit["state"] = "normal"
+			self.btn_edit["text"] = u'Просмотр'
 	def sync(self):
 		""" Перенсит данные из формы в reestr_info
 		Пока только дата отправки
