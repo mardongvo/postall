@@ -153,21 +153,21 @@ class DBStorage:
 	def delete_reestr(self, reestr_info):
 		""" Удаление реестра
 		
-		:param reestr_id:
+		:param reestr_id: integer - db_reestr_id
 		:return:
 		"""
 		return self._run_sql(self._build_sql("REESTR_INFO", "DELETE", {"db_reestr_id":reestr_info["db_reestr_id"],"db_locked":LOCK_STATE_FREE}, "db_reestr_id"), False)
 	def sync_reestr(self, reestr_id):
 		""" Синхронизация полей реестра после изменения писем
 		
-		:param reestr_id:
+		:param reestr_id: integer - db_reestr_id
 		:return:
 		"""
 		self._run_sql("with t as (select count(*) CNT from LETTER_INFO where db_reestr_id=%s) update REESTR_INFO set db_letter_count=t.CNT from t where db_reestr_id=%s" % (value2str(reestr_id),value2str(reestr_id)))
 	def modify_reestr(self, reestr_info):
 		""" Изменение реестра
 		
-		:param reestr_info:
+		:param reestr_info: dict() -
 		:return:
 		"""
 		return self._run_sql(self._build_sql("REESTR_INFO", "UPDATE", reestr_info,
@@ -199,8 +199,8 @@ class DBStorage:
 		return res
 	def lock_letter(self, letter_info, state):
 		""" Смена состояния блокировки письма
-		letter_id -- идентификатор письма db_letter_id
-		state -- LOCK_STATE_*
+		:param letter_info: dict() - configuration.LETTER_DEFAULTS
+		:param state: -- LOCK_STATE_*
 		"""
 		return self._run_sql(
 			self._build_sql("LETTER_INFO", "UPDATE", {"db_letter_id": letter_info["db_letter_id"], "db_locked": state},
