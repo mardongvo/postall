@@ -28,3 +28,11 @@ class UIScrollFrame(tk.Frame):
 		self.frame.bind("<Configure>", self.onFrameConfigure)
 	def onFrameConfigure(self, event):
 		self.canvas.configure(scrollregion=(0,0,event.width,event.height))
+	def clear(self):
+		""" Очистка содержимого
+		
+		:return:
+		"""
+		for w in self.frame.winfo_children():
+			w.destroy()
+
