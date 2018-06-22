@@ -137,6 +137,11 @@ class DBStorage:
 		for i in self._select_sql("REESTR_INFO", "select * from REESTR_INFO where db_create_date between %s and %s;" % (value2str(fromdate),value2str(todate))):
 				res.append(i)
 		return res
+	def get_letters_list(self, reestr_id):
+		res = []
+		for i in self._select_sql("LETTER_INFO", self._build_sql("LETTER_INFO", "SELECT", {"db_reestr_id":reestr_id})):
+			res.append(i)
+		return res
 	def get_reestr_info(self, reestr_id):
 		for i in self._select_sql("REESTR_INFO", self._build_sql("REESTR_INFO", "SELECT", {"db_reestr_id":reestr_id})):
 			return i
