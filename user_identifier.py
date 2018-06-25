@@ -12,11 +12,11 @@ class UserIdentifier:
 	def get_fio(self):
 		if "fio" in self.user_info:
 			return self.user_info["fio"]
-		return ""
+		return u""
 	def get_user_id(self):
 		if "db_user_id" in self.user_info:
 			return self.user_info["db_user_id"]
-		return ""
+		return u""
 	def is_admin(self):
 		if "admin" in self.user_info:
 			return self.user_info["admin"]
