@@ -27,8 +27,13 @@ class UILetterAdd(tk.Frame):
 		#кнопки
 		self.btn_add = tk.Button(self, text = u"Добавить", command=self.onClickAdd)
 		self.btn_add.grid({"column":2, "row":0, "sticky":"NSEW"})
+		self.btn_refresh = tk.Button(self, text=u"Обновить", command=self.onClickRefresh)
+		self.btn_refresh.grid({"column": 3, "row": 0, "sticky": "NSEW"})
 	def onClickAdd(self):
 		if self.action_callback:
 			letter_info = copy(self.default_values)
 			contragent_info = {"srctype":0,"srcid":self.entry_id.get()}
 			self.action_callback("ADD", letter_info, contragent_info)
+	def onClickRefresh(self):
+		if self.action_callback:
+			self.action_callback("REFRESH", None)
