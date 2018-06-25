@@ -42,7 +42,8 @@ class UIMainWindow(tk.Frame):
 			self.dbstorage.add_reestr(reestr_info)
 			self.refresh()
 		if command == "EDIT":
-			UIEditWindow(tk.Toplevel(self.master), self.postconn, self.dbstorage, self.user_ident, reestr_info)
+			w = UIEditWindow(tk.Toplevel(self.master), self.postconn, self.dbstorage, self.user_ident, reestr_info)
+			w.pack(fill="both", expand=True)
 		if command == "DELETE":
 			self.dbstorage.delete_reestr(reestr_info)
 			self.refresh()
@@ -50,3 +51,4 @@ class UIMainWindow(tk.Frame):
 			pass
 		if command == "LOCK":
 			self.dbstorage.lock_reestr(reestr_info["db_reestr_id"], LOCK_STATE_FINAL)
+			self.refresh()
