@@ -3,7 +3,7 @@
 import requests
 import json
 import configuration as defconf
-from datetime import datetime
+from datetime import datetime, date
 
 def extract_errors(obj):
 	"""Извлечение информации об ошибках из ответа json
@@ -119,7 +119,7 @@ class PostConnector:
 		backlog_ids -- массив идентификаторов заказов
 		"""
 		path = "/1.0/user/shipment"
-		if isinstance(send_date, datetime):
+		if isinstance(send_date, datetime) or isinstance(send_date, date):
 			path = path + "?sending-date=" + send_date.strftime("%Y-%m-%d")
 		errors = {}
 		batch_info = {}
@@ -142,8 +142,9 @@ class PostConnector:
 			errors[bid] += str(e)
 		#2 добавление в существующую партию
 		if batch_name != None:
-			for bid in backlog_ids[1:]:
-				errors[bid] = self.add_backlog_to_batch(batch_name, bid)
+			if len(backlog_ids)>1:
+				for bid in backlog_ids[1:]:
+					errors[bid] = self.add_backlog_to_batch(batch_name, bid)
 		return (batch_info, errors)
 	def modify_batch(self, batch_name, send_date):
 		"""Изменение дня отправки в почтовое отделение
