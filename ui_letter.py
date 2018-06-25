@@ -97,24 +97,16 @@ class UILetter(tk.Frame):
 			if c['key'] == 'mass':
 				self.mass_widget = ent
 		#кнопки
-		self.btn_save = tk.Button(self)
-		self.btn_save["text"] = u"Сохранить"
-		self.btn_save["command"] = self.onClickSave
+		self.btn_save = tk.Button(self, text=u"Сохранить", command=self.onClickSave, bg=COLORS[bgcolor][0])
 		self.btn_save.grid({"column":max(gridcol.values())+1, "row":0, "sticky":"NSEW"})
 		#
-		self.btn_print = tk.Button(self)
-		self.btn_print["text"] = u"Конверт"
-		self.btn_print["command"] = self.onClickPrint
+		self.btn_print = tk.Button(self, text=u"Конверт", command=self.onClickPrint, bg=COLORS[bgcolor][0])
 		self.btn_print.grid({"column":max(gridcol.values())+2, "row":0, "sticky":"NSEW"})
 		#
-		self.btn_delete = tk.Button(self)
-		self.btn_delete["text"] = u"Удалить"
-		self.btn_delete["command"] = self.onClickDelete
+		self.btn_delete = tk.Button(self, text=u"Удалить", command=self.onClickDelete, bg=COLORS[bgcolor][0])
 		self.btn_delete.grid({"column":max(gridcol.values())+1, "row":1, "sticky":"NSEW"})
 		#
-		self.btn_barcode = tk.Button(self)
-		self.btn_barcode["text"] = u"Получить номер"
-		self.btn_barcode["command"] = self.onClickBarcode
+		self.btn_barcode = tk.Button(self, text=u"Получить номер", command=self.onClickBarcode, bg=COLORS[bgcolor][0])
 		self.btn_barcode.grid({"column":max(gridcol.values())+1, "row":2, "sticky":"NSEW", "columnspan":2})
 	def onShowMenu(self, e):
 		""" Event - отображение меню для entry
@@ -175,18 +167,24 @@ class UILetter(tk.Frame):
 	def onClickPrint(self):
 		""" Event - клик по кнопке Конверт
 		"""
+		self.sync()
 		if self.action_callback:
 			self.action_callback("PRINT", self.letter_info)
 	def onClickDelete(self):
 		""" Event - клик по кнопке Удалить
 		"""
+		self.sync()
 		if self.action_callback:
 			self.action_callback("DELETE", self.letter_info)
 	def onClickBarcode(self):
 		""" Event - клик по кнопке Получить/удалить код
 		"""
+		self.sync()
 		if self.action_callback:
-			self.action_callback("BARCODE", self.letter_info)
+			if (self.letter_info["db_locked"] == LOCK_STATE_FREE) or (self.letter_info["db_locked"] == LOCK_STATE_BACKLOG):
+				self.action_callback("BARCODE_ADD", self.letter_info)
+			elif (self.letter_info["db_locked"] == LOCK_STATE_BATCH):
+				self.action_callback("BARCODE_DEL", self.letter_info)
 	def onMasspEdit(self, event):
 		pages_count = 1
 		try:
@@ -218,12 +216,14 @@ class UILetter(tk.Frame):
 		self.btn_print["state"] = "disabled"
 		self.btn_save["state"] = "disabled"
 		self.btn_delete["state"] = "disabled"
+		self.btn_barcode["state"] = "disabled"
 		self.btn_barcode["text"] = u'Присвоить номер'
 		for c in self.GUI_DEF:
 			c["widget"].config(state='readonly')
 		if lock_state == LOCK_STATE_FREE:
 			self.btn_save["state"] = "normal"
 			self.btn_delete["state"] = "normal"
+			self.btn_barcode["state"] = "normal"
 			for c in self.GUI_DEF:
 				if c["edit"]:
 					c["widget"].config(state='normal')
@@ -231,6 +231,7 @@ class UILetter(tk.Frame):
 			pass
 		if lock_state == LOCK_STATE_BATCH:
 			self.btn_print["state"] = "normal"
+			self.btn_barcode["state"] = "normal"
 			self.btn_barcode["text"] = u'Удалить номер'
 		if lock_state == LOCK_STATE_FINAL:
 			pass
