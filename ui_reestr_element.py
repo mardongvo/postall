@@ -98,6 +98,8 @@ class UIReestrElement(tk.Frame):
 		self.btn_date["state"] = "disabled"
 		self.btn_lock["state"] = "disabled"
 		self.btn_delete["state"] = "disabled"
+		if self.user_ident.is_admin() == 1:
+			self.btn_lock["state"] = "normal"
 		for c in self.GUI_DEF:
 			c["widget"].config(state='readonly')
 		if lock_state == LOCK_STATE_FREE:
@@ -109,11 +111,13 @@ class UIReestrElement(tk.Frame):
 		if lock_state == LOCK_STATE_BATCH:
 			self.btn_edit["state"] = "normal"
 			self.btn_date["state"] = "normal"
-			if self.user_ident.is_admin() == 1:
-				self.btn_lock["state"] = "normal"
+			for c in self.GUI_DEF:
+				if c["edit"]:
+					c["widget"].config(state='normal')
 		if lock_state == LOCK_STATE_FINAL:
 			self.btn_edit["state"] = "normal"
 			self.btn_edit["text"] = u'Просмотр'
+			self.btn_lock["state"] = "disabled"
 	def sync(self):
 		""" Перенсит данные из формы в reestr_info
 		Пока только дата отправки
