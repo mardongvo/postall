@@ -69,8 +69,8 @@ class DBStorage:
 					 ' and '.join( map(lambda a: "%s=%s" % (self.key2field[tablename][a], value2str(data[a])), kk) ))
 		if command == "SELECT":
 			kk = filter(lambda a: a in self.key2field[tablename], data.keys())
-			sql = "SELECT * FROM %s where %s;" % \
-				  (tablename, ' and '.join( map(lambda a: "%s=%s" % (self.key2field[tablename][a], value2str(data[a])), kk) ))
+			sql = "SELECT * FROM %s where %s %s;" % \
+				  (tablename, ' and '.join( map(lambda a: "%s=%s" % (self.key2field[tablename][a], value2str(data[a])), kk) ), ("order by "+key_field) if key_field!=None else "" )
 		return sql
 	def _run_sql(self, sql, need_return=False):
 		""" Функция выполнения sql, модифицирующих данные
@@ -100,7 +100,7 @@ class DBStorage:
 				res = 0
 			else:
 				res = False
-			error += str(e)
+			error += unicode(e)
 		return res, error
 	def _select_sql(self, tablename, sql, filter_fields=True):
 		error = ""
@@ -111,15 +111,18 @@ class DBStorage:
 				res = {}
 				for i in range(len(data)):
 					fld = cur.description[i][0]
+					v = data[i]
+					if isinstance(v, str):
+						v = v.decode("UTF-8")
 					if filter_fields and fld in self.field2key[tablename]:
-						res[self.field2key[tablename][fld]] = data[i]
+						res[self.field2key[tablename][fld]] = v
 					else:
 						fldname = fld
 						if fld in self.field2key[tablename]: fldname = self.field2key[tablename][fld]
-						res[fldname] = data[i]
+						res[fldname] = v
 				yield res, ""
 		except Exception as e:
-			error += str(e)
+			error += unicode(e)
 			yield None, error
 	def get_user_info(self, userid):
 		for i in self._select_sql("USER_DICT", "select * from USER_DICT where db_user_id=%s;" % (value2str(userid),)):
@@ -134,12 +137,12 @@ class DBStorage:
 		if not(isinstance(fromdate, datetime) and isinstance(todate, datetime)):
 			return [], u"Даты отбора реестров не являются объектом datetime"
 		res = []
-		for i in self._select_sql("REESTR_INFO", "select * from REESTR_INFO where db_create_date between %s and %s;" % (value2str(fromdate),value2str(todate))):
+		for i in self._select_sql("REESTR_INFO", "select * from REESTR_INFO where db_create_date between %s and %s order by db_create_date desc, db_reestr_id;" % (value2str(fromdate),value2str(todate))):
 				res.append(i)
 		return res
 	def get_letters_list(self, reestr_id):
 		res = []
-		for i in self._select_sql("LETTER_INFO", self._build_sql("LETTER_INFO", "SELECT", {"db_reestr_id":reestr_id})):
+		for i in self._select_sql("LETTER_INFO", self._build_sql("LETTER_INFO", "SELECT", {"db_reestr_id":reestr_id}, "db_letter_id")):
 			res.append(i)
 		return res
 	def get_reestr_info(self, reestr_id):
@@ -169,7 +172,16 @@ class DBStorage:
 		:param reestr_id: integer - db_reestr_id
 		:return:
 		"""
+		#синхронизация количества писем
 		self._run_sql("with t as (select count(*) CNT from LETTER_INFO where db_reestr_id=%s) update REESTR_INFO set db_letter_count=t.CNT from t where db_reestr_id=%s" % (value2str(reestr_id),value2str(reestr_id)))
+		#синхронизация состояния
+		self._run_sql(
+			"with t as (select count(*) CNT from LETTER_INFO where db_reestr_id=%s and db_locked=%s) update REESTR_INFO set db_locked=%s from t where db_reestr_id=%s and t.CNT>0" % (
+			value2str(reestr_id), value2str(LOCK_STATE_BATCH), value2str(LOCK_STATE_BATCH), value2str(reestr_id)))
+		self._run_sql(
+			"with t as (select count(*) CNT from LETTER_INFO where db_reestr_id=%s and db_locked=%s) update REESTR_INFO set db_locked=%s, batch_name='' from t where db_reestr_id=%s and t.CNT=0" % (
+			value2str(reestr_id), value2str(LOCK_STATE_BATCH), value2str(LOCK_STATE_FREE), value2str(reestr_id)))
+
 	def modify_reestr(self, reestr_info):
 		""" Изменение реестра
 		
