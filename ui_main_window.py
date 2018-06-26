@@ -27,6 +27,35 @@ class UIMainWindow(tk.Frame):
 		self.ui_scrollarea = UIScrollFrame(self)
 		self.ui_scrollarea.config(bd=5, relief=tk.GROOVE)
 		self.ui_scrollarea.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+		#
+		#виджеты Tk Entry по-умолчанию не имеют контекстного меню
+		#специально запомненные виджеты для обработки событий
+		self.ctx_menu = tk.Menu(self, tearoff=0)
+		self.ctx_menu.add_command(label=u"Вырезать")
+		self.ctx_menu.add_command(label=u"Копировать")
+		self.ctx_menu.add_command(label=u"Вставить")
+		self.bind_class("Entry", "<Button-3><ButtonRelease-3>", self.onShowMenu)
+		self.bind_class("Entry", "<Control-KeyPress>", self.onCCPrus) #обработка Ctrl-C,V,X при русской раскладке
+	def onShowMenu(self, e):
+		""" Event - отображение меню для entry
+		"""
+		w = e.widget
+		self.ctx_menu.entryconfigure(0, command=lambda: w.event_generate("<<Cut>>"))
+		self.ctx_menu.entryconfigure(1, command=lambda: w.event_generate("<<Copy>>"))
+		self.ctx_menu.entryconfigure(2, command=lambda: w.event_generate("<<Paste>>"))
+		self.ctx_menu.tk.call("tk_popup", self.ctx_menu, e.x_root, e.y_root)
+	def onCCPrus(self, event):
+		""" Event - шорткаты Ctrl-C,V,X при русской раскладке
+		"""
+		# C - 67
+		# V - 86
+		# X - 88
+		if event.keycode==88:
+			event.widget.event_generate("<<Cut>>")
+		if event.keycode==67:
+			event.widget.event_generate("<<Copy>>")
+		if event.keycode==86:
+			event.widget.event_generate("<<Paste>>")
 	def refresh(self):
 		self.rowcount = 0
 		todate = datetime.now()+timedelta(1)

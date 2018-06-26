@@ -45,13 +45,6 @@ class UILetter(tk.Frame):
 		tk.Frame.__init__(self, master)
 		self["bg"] = COLORS[bgcolor][0]
 		#self.pack(fill="both", expand=True)
-		#виджеты Tk Entry по-умолчанию не имеют контекстного меню
-		self.ctx_menu = tk.Menu(self, tearoff=0)
-		self.ctx_menu.add_command(label=u"Вырезать")
-		self.ctx_menu.add_command(label=u"Копировать")
-		self.ctx_menu.add_command(label=u"Вставить")		
-		self.bind_class("Entry", "<Button-3><ButtonRelease-3>", self.onShowMenu)
-		#специально запомненные виджеты для обработки событий
 		self.index_widget = None
 		self.mass_widget = None
 		self.massp_widget = None
@@ -85,7 +78,6 @@ class UILetter(tk.Frame):
 				ent.bind("<KeyRelease>", self.onEntryUpdate)
 			ent.bind("<<Cut>>", self.onEntrySpec)
 			ent.bind("<<Paste>>", self.onEntrySpec)
-			ent.bind("<Control-KeyPress>", self.onCCPrus)
 			c['widget'] = ent
 			if c['key'] != 'barcode':
 				gridcol[c['row']] += 2
@@ -108,14 +100,6 @@ class UILetter(tk.Frame):
 		#
 		self.btn_barcode = tk.Button(self, text=u"Получить номер", command=self.onClickBarcode, bg=COLORS[bgcolor][0])
 		self.btn_barcode.grid({"column":max(gridcol.values())+1, "row":2, "sticky":"NSEW", "columnspan":2})
-	def onShowMenu(self, e):
-		""" Event - отображение меню для entry
-		"""
-		w = e.widget
-		self.ctx_menu.entryconfigure(0, command=lambda: w.event_generate("<<Cut>>"))
-		self.ctx_menu.entryconfigure(1, command=lambda: w.event_generate("<<Copy>>"))
-		self.ctx_menu.entryconfigure(2, command=lambda: w.event_generate("<<Paste>>"))
-		self.ctx_menu.tk.call("tk_popup", self.ctx_menu, e.x_root, e.y_root)
 	def onEntryUpdate(self, event):
 		""" Event - при изменении entry изменить цвет кнопки Сохранить
 		"""
@@ -145,18 +129,6 @@ class UILetter(tk.Frame):
 				#	self.mlist_widgets[idd]['city'].delete(0,"end")
 				#	self.mlist_widgets[idd]['city'].insert("end", i[1])
 				#cur.close()
-	def onCCPrus(self, event):
-		""" Event - шорткаты Ctrl-C,V,X при русской раскладке
-		"""
-		# C - 67
-		# V - 86
-		# X - 88
-		if event.keycode==88:
-			event.widget.event_generate("<<Cut>>")
-		if event.keycode==67:
-			event.widget.event_generate("<<Copy>>")
-		if event.keycode==86:
-			event.widget.event_generate("<<Paste>>")
 	def onClickSave(self):
 		""" Event - клик по кнопке Сохранить
 		"""
