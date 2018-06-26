@@ -11,6 +11,7 @@ from envelope_render import render_DL_letters
 import os
 from copy import copy
 import configuration as defconf
+import logging
 
 class UIEditWindow(tk.Frame):
 	"""UI класс главное окно
@@ -141,11 +142,15 @@ class UIEditWindow(tk.Frame):
 				for k,v in cinfo.iteritems():
 					letter_info[k] = v
 			res = self.dbstorage.add_letter(letter_info)
+			self.refresh()
 		if command == "SAVE":
 			res = self.dbstorage.modify_letter(letter_info)
-			self.refresh()
+			print(res)
 			if res[0]:
 				return True
+			else:
+				logging.error(res[1])
+				return False
 		if command == "PRINT":
 			from_info = copy(defconf.FROM_INFO)
 			from_info["fio"] = UserIdentifier(self.dbstorage.get_user_info(letter_info["db_user_id"])).get_fio()
@@ -160,12 +165,15 @@ class UIEditWindow(tk.Frame):
 			os.startfile(render_DL_letters(lts, from_info))
 		if command == "DELETE":
 			self.dbstorage.delete_letter(letter_info)
+			self.refresh()
 		if command == "BARCODE_ADD":
 			self.barcode_add(letter_info)
 			self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
+			self.refresh()
 		if command == "BARCODE_DEL":
 			self.barcode_del(letter_info)
 			self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
+			self.refresh()
 		if command == "BARCODE_ADD_ALL":
 			for data, err in self.dbstorage.get_letters_list(self.reestr_info["db_reestr_id"]):
 				if err == "":
@@ -173,6 +181,7 @@ class UIEditWindow(tk.Frame):
 						data["db_locked"] = LOCK_STATE_FINAL
 					self.barcode_add(data)
 			self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
+			self.refresh()
 		if command == "BARCODE_DEL_ALL":
 			for data, err in self.dbstorage.get_letters_list(self.reestr_info["db_reestr_id"]):
 				if err == "":
@@ -180,4 +189,6 @@ class UIEditWindow(tk.Frame):
 						data["db_locked"] = LOCK_STATE_FINAL
 					self.barcode_del(data)
 			self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
-		self.refresh()
+			self.refresh()
+		if command == "REFRESH":
+			self.refresh()
