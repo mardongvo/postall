@@ -150,6 +150,14 @@ class UIEditWindow(tk.Frame):
 			from_info = copy(defconf.FROM_INFO)
 			from_info["fio"] = UserIdentifier(self.dbstorage.get_user_info(letter_info["db_user_id"])).get_fio()
 			os.startfile(render_DL_letters([letter_info], from_info))
+		if command == "PRINT_ALL":
+			lts = []
+			for data, err in self.dbstorage.get_letters_list(self.reestr_info["db_reestr_id"]):
+				if err == "":
+					lts.append(data)
+			from_info = copy(defconf.FROM_INFO)
+			from_info["fio"] = UserIdentifier(self.dbstorage.get_user_info(self.reestr_info["db_user_id"])).get_fio()
+			os.startfile(render_DL_letters(lts, from_info))
 		if command == "DELETE":
 			self.dbstorage.delete_letter(letter_info)
 		if command == "BARCODE_ADD":
