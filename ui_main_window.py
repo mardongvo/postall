@@ -5,7 +5,7 @@ from ui_reestr_add import UIReestrAdd
 from ui_reestr_element import UIReestrElement
 from ui_scrollframe import UIScrollFrame
 from datetime import datetime, timedelta
-from dbstorage import LOCK_STATE_FINAL
+from dbstorage import LOCK_STATE_FINAL, LOCK_STATE_BATCH
 from ui_edit_window import UIEditWindow
 
 class UIMainWindow(tk.Frame):
@@ -48,7 +48,13 @@ class UIMainWindow(tk.Frame):
 			self.dbstorage.delete_reestr(reestr_info)
 			self.refresh()
 		if command == "DATE":
-			pass
+			if reestr_info["db_locked"] == LOCK_STATE_BATCH:
+				err = self.postconn.modify_batch(reestr_info["batch-name"], reestr_info["list-number-date"])
+				if err == "":
+					self.dbstorage.modify_reestr(reestr_info)
+				self.refresh()
 		if command == "LOCK":
 			self.dbstorage.lock_reestr(reestr_info["db_reestr_id"], LOCK_STATE_FINAL)
+			self.refresh()
+		if command == "REFRESH":
 			self.refresh()
