@@ -4,6 +4,7 @@ import Tkinter as tk
 import copy
 from dbstorage import LOCK_STATE_FREE, LOCK_STATE_BACKLOG, LOCK_STATE_BATCH, LOCK_STATE_FINAL
 from datetime import datetime, date
+import logging
 
 DEFAULT_WIDTH = 20
 
@@ -104,6 +105,7 @@ class UIReestrElement(tk.Frame):
 			c["widget"].config(state='readonly')
 		if lock_state == LOCK_STATE_FREE:
 			self.btn_edit["state"] = "normal"
+			self.btn_date["state"] = "normal"
 			self.btn_delete["state"] = "normal"
 			for c in self.GUI_DEF:
 				if c["edit"]:
@@ -125,10 +127,10 @@ class UIReestrElement(tk.Frame):
 		for c in self.GUI_DEF:
 			if c["key"] == 'list-number-date':
 				try:
-					v = datetime.strptime(c["widget"].get(), "%Y-%m-%d")
+					v = datetime.strptime(c["widget"].get(), "%d.%m.%Y")
 					self.reestr_info[c["key"]] = v
 				except ValueError:
-					pass #TODO: log errors
+					logging.error(u"Невозможно установить дату %s", c["widget"].get())
 	def onClickDate(self):
 		self.sync()
 		if self.action_callback:
