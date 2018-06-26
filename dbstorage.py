@@ -91,6 +91,8 @@ class DBStorage:
 				if cnt != 1:
 					res = False
 					raise Exception(u'Измененных строк != 1;')
+				else:
+					res = True
 			self.conn.commit()
 		except Exception as e:
 			try:
@@ -164,7 +166,7 @@ class DBStorage:
 		:param reestr_id: integer - db_reestr_id
 		:return:
 		"""
-		inf, err = self.get_reestr_info(self, reestr_info["db_reestr_id"])
+		inf, err = self.get_reestr_info(reestr_info["db_reestr_id"])
 		if err == "":
 			if inf["db_letter_count"]==0:
 				return self._run_sql(self._build_sql("REESTR_INFO", "DELETE", {"db_reestr_id":reestr_info["db_reestr_id"],"db_locked":LOCK_STATE_FREE}, "db_reestr_id"), False)
