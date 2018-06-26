@@ -55,6 +55,8 @@ class UIReestrAdd(tk.Frame):
 		#кнопки
 		self.btn_add = tk.Button(self, text = u"Добавить", command=self.onClickAdd)
 		self.btn_add.grid({"column":col+1, "row":0, "sticky":"NSEW"})
+		self.btn_refresh = tk.Button(self, text=u"Обновить", command=self.onClickRefresh)
+		self.btn_refresh.grid({"column": col + 2, "row": 0, "sticky": "NSEW"})
 	def onClickAdd(self):
 		if self.action_callback:
 			reestr = {}
@@ -77,3 +79,6 @@ class UIReestrAdd(tk.Frame):
 					v = c['widget'].get()
 				reestr[c['key']] = v
 			self.action_callback("ADD", reestr)
+	def onClickRefresh(self):
+		if self.action_callback:
+			self.action_callback("REFRESH", None)
