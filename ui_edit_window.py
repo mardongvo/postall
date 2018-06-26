@@ -69,6 +69,8 @@ class UIEditWindow(tk.Frame):
 			uu.pack(side=tk.TOP, fill=tk.X, expand=False)
 			self.rowcount += 1
 	def barcode_add(self, letter_info):
+		self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
+		if self.reestr_info["db_locked"] == LOCK_STATE_FINAL: return
 		#1. необходимо добавить в новые
 		if letter_info["db_locked"] == LOCK_STATE_FREE:
 			#копируем постоянные поля
@@ -118,6 +120,8 @@ class UIEditWindow(tk.Frame):
 						letter_info["barcode"] = inf["barcode"]
 				self.dbstorage.modify_letter(letter_info)
 	def barcode_del(self, letter_info):
+		self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
+		if self.reestr_info["db_locked"] == LOCK_STATE_FINAL: return
 		# удаляем письмо из новых
 		for idd, err in self.postconn.remove_backlogs([letter_info["id"]]):
 			linf = {"db_letter_id": letter_info["db_letter_id"], "db_locked": LOCK_STATE_FREE, "id": 0,
@@ -153,7 +157,7 @@ class UIEditWindow(tk.Frame):
 				return False
 		if command == "PRINT":
 			from_info = copy(defconf.FROM_INFO)
-			from_info["fio"] = UserIdentifier(self.dbstorage.get_user_info(letter_info["db_user_id"])).get_fio()
+			from_info["fio"] = UserIdentifier(self.dbstorage.get_user_info(letter_info["db_user_id"])[0]).get_fio()
 			os.startfile(render_DL_letters([letter_info], from_info))
 		if command == "PRINT_ALL":
 			lts = []
@@ -161,7 +165,7 @@ class UIEditWindow(tk.Frame):
 				if err == "":
 					lts.append(data)
 			from_info = copy(defconf.FROM_INFO)
-			from_info["fio"] = UserIdentifier(self.dbstorage.get_user_info(self.reestr_info["db_user_id"])).get_fio()
+			from_info["fio"] = UserIdentifier(self.dbstorage.get_user_info(self.reestr_info["db_user_id"])[0]).get_fio()
 			os.startfile(render_DL_letters(lts, from_info))
 		if command == "DELETE":
 			self.dbstorage.delete_letter(letter_info)
