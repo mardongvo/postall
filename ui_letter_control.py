@@ -20,6 +20,8 @@ class UILetterControl(tk.Frame):
 		self.btn_add_barcodes.grid({"column": 2, "row":0, "sticky":"NSEW"})
 		self.btn_del_barcodes = tk.Button(self, text=u"Удалить номера у всех", command=self.onClickDel)
 		self.btn_del_barcodes.grid({"column": 3, "row": 0, "sticky": "NSEW"})
+		self.btn_print_all = tk.Button(self, text=u"Печать всех", command=self.onClickPrint)
+		self.btn_print_all.grid({"column": 4, "row": 0, "sticky": "NSEW"})
 	def onClickAdd(self):
 		if self.action_callback:
 			self.action_callback("BARCODE_ADD_ALL", None)
@@ -29,3 +31,6 @@ class UILetterControl(tk.Frame):
 	def onClickRefresh(self):
 		if self.action_callback:
 			self.action_callback("REFRESH", None)
+	def onClickPrint(self):
+		if self.action_callback:
+			self.action_callback("PRINT_ALL", None)
