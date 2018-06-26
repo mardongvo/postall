@@ -164,8 +164,11 @@ class DBStorage:
 		:param reestr_id: integer - db_reestr_id
 		:return:
 		"""
-		#TODO: добавить проверку на количество писем
-		return self._run_sql(self._build_sql("REESTR_INFO", "DELETE", {"db_reestr_id":reestr_info["db_reestr_id"],"db_locked":LOCK_STATE_FREE}, "db_reestr_id"), False)
+		inf, err = self.get_reestr_info(self, reestr_info["db_reestr_id"])
+		if err == "":
+			if inf["db_letter_count"]==0:
+				return self._run_sql(self._build_sql("REESTR_INFO", "DELETE", {"db_reestr_id":reestr_info["db_reestr_id"],"db_locked":LOCK_STATE_FREE}, "db_reestr_id"), False)
+		return False, u"Реестр не пустой"
 	def sync_reestr(self, reestr_id):
 		""" Синхронизация полей реестра после изменения писем
 		
