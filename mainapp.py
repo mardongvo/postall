@@ -35,7 +35,8 @@ root = Tk()
 uinf, err = db.get_user_info(os.environ['USERNAME'])
 if err > "":
 	logging.error(err)
-	uinf = {}
+if (err > "") or len(uinf)==0:
+	uinf = {"db_user_id":os.environ['USERNAME'], "fio":"", "is_admin":0}
 uid = UserIdentifier(uinf)
 
 app = UIMainWindow(root, pc, db, uid)
