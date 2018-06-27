@@ -8,7 +8,7 @@ def to_base64(str):
 DB_CONNECTION="host=ip port=5432 dbname=postall user=... password=..." #database path/auth
 PROXY_URL="..." #http proxy, set None for no-proxy
 #see https://otpravka.pochta.ru/specification#/authorization-token
-ACESS_TOKEN	= "....."
+ACCESS_TOKEN	= "....."
 LOGIN_PASSWORD	= to_base64("login:pass")
 POST_SERVER = "https://otpravka-api.pochta.ru"
 
