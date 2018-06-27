@@ -32,7 +32,7 @@ class PostConnector:
 		self.proxy = None
 		self.access_token = ""
 		self.login_password = ""
-	def set_parameters(self, post_server=defconf.POST_SERVER, token=defconf.ACESS_TOKEN, login_password=defconf.LOGIN_PASSWORD, proxyurl=defconf.PROXY_URL):
+	def set_parameters(self, post_server=defconf.POST_SERVER, token=defconf.ACCESS_TOKEN, login_password=defconf.LOGIN_PASSWORD, proxyurl=defconf.PROXY_URL):
 		"""Установка параметров
 		
 		https://otpravka.pochta.ru/specification#/orders-creating_order
