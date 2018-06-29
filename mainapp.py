@@ -15,7 +15,7 @@ from copy import copy
 
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 
-conn = psycopg2.connect("host=127.0.0.1 user=postgres dbname=postall")
+conn = psycopg2.connect(defconf.DB_CONNECTION)
 db = DBStorage(conn)
 # инициализация информации о таблицах
 db.add_field_map("REESTR_INFO", defconf.REESTR_DB_FIELDS)
