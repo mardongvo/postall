@@ -170,7 +170,8 @@ class DBStorage:
 		if err == "":
 			if inf["db_letter_count"]==0:
 				return self._run_sql(self._build_sql("REESTR_INFO", "DELETE", {"db_reestr_id":reestr_info["db_reestr_id"],"db_locked":LOCK_STATE_FREE}, "db_reestr_id"), False)
-		return False, u"Реестр не пустой"
+			return False, u"Реестр не пустой"
+		return False, err
 	def sync_reestr(self, reestr_id):
 		""" Синхронизация полей реестра после изменения писем
 		
