@@ -69,15 +69,17 @@ class UIMainWindow(tk.Frame):
 	def action_reestr(self, command, reestr_info):
 		if command == "ADD":
 			reestr_info["db_user_id"] = self.user_ident.get_user_id()
-			self.dbstorage.add_reestr(reestr_info)
+			res,err = self.dbstorage.add_reestr(reestr_info)
+			if err > "":
+				logging.error(err)
 			self.refresh()
 		if command == "EDIT":
 			w = UIEditWindow(tk.Toplevel(self.master), self.postconn, self.dbstorage, self.user_ident, reestr_info)
 			w.pack(fill="both", expand=True)
 		if command == "DELETE":
-			res = self.dbstorage.delete_reestr(reestr_info)
-			if res[1]>"":
-				logging.error(res[1])
+			res,err = self.dbstorage.delete_reestr(reestr_info)
+			if err>"":
+				logging.error(err)
 			self.refresh()
 		if command == "DATE":
 			if reestr_info["db_locked"] == LOCK_STATE_BATCH:
@@ -87,10 +89,14 @@ class UIMainWindow(tk.Frame):
 				else:
 					logging.error(err)
 			if reestr_info["db_locked"] == LOCK_STATE_FREE:
-				self.dbstorage.modify_reestr(reestr_info)
+				err = self.dbstorage.modify_reestr(reestr_info)
+				if err > "":
+					logging.error(err)
 			self.refresh()
 		if command == "LOCK":
-			self.dbstorage.lock_reestr(reestr_info["db_reestr_id"], LOCK_STATE_FINAL)
+			res,err = self.dbstorage.lock_reestr(reestr_info["db_reestr_id"], LOCK_STATE_FINAL)
+			if err > "":
+				logging.error(err)
 			self.refresh()
 		if command == "REFRESH":
 			self.refresh()
