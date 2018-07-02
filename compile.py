@@ -3,6 +3,7 @@ from distutils.core import setup
 import py2exe
 
 sys.path.insert(0, "C:\\Python27\\Lib\\site-packages\\reportlab")
+sys.path.insert(0, "C:\\Python27\\Lib\\site-packages\\requests")
 setup(
 	console=[{"script":"mainapp.py","icon_resources": [(0,"icon.ico")]}
 	],
@@ -19,6 +20,7 @@ setup(
 				'reportlab.pdfbase',
 				'reportlab.pdfgen',
 				'reportlab.platypus',
+				'requests',
 			]
 		}
 	}	
