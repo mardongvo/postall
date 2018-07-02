@@ -5,7 +5,7 @@ import base64
 def to_base64(str):
 	return base64.b64encode(str.encode()).decode("utf-8")
 
-DB_CONNECTION="host=ip port=5432 dbname=postall user=... password=..." #database path/auth
+DB_CONNECTION="host=127.0.0.1 port=5432 dbname=postall user=... password=..." #database path/auth
 PROXY_URL="..." #http proxy, set None for no-proxy
 #see https://otpravka.pochta.ru/specification#/authorization-token
 ACCESS_TOKEN	= "....."
@@ -101,6 +101,7 @@ REESTR_KEY_FIELD = "db_reestr_id"
 CONTRAGENT_DB_FIELDS = {
 	"srctype": 0, #тип источника
 	"srcid": "", #идентификатор в источнике
+	"recipient-name": "",  # Наименование получателя одной строкой (ФИО, наименование организации)
 }
 
 #пользователи
