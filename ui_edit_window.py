@@ -65,8 +65,9 @@ class UIEditWindow(tk.Frame):
 		for data, err in self.dbstorage.get_letters_list(self.reestr_info["db_reestr_id"]):
 			if err=="":
 				uu = UILetter(self.ui_scrollarea.frame, self.rowcount % 2, self.action_letter)
-				#если реестр заблокирован, передаем это письмам, чтобы не возникало ложного ощущения, что можно редактировать
-				if self.reestr_info["db_locked"]==LOCK_STATE_FINAL:
+				#если реестр заблокирован или это чужое письмо, передаем это письмам, чтобы не возникало ложного ощущения, что можно редактировать
+				if (self.reestr_info["db_locked"]==LOCK_STATE_FINAL) or \
+					(self.user_ident.get_user_id() != data["db_user_id"] and self.user_ident.is_admin()==0):
 					data["db_locked"]=LOCK_STATE_FINAL
 				uu.set_data(data)
 				uu.pack(side=tk.TOP, fill=tk.X, expand=False)
@@ -220,7 +221,8 @@ class UIEditWindow(tk.Frame):
 		if command == "BARCODE_ADD_ALL":
 			for data, err in self.dbstorage.get_letters_list(self.reestr_info["db_reestr_id"]):
 				if err == "":
-					if self.reestr_info["db_locked"] == LOCK_STATE_FINAL:
+					if (self.reestr_info["db_locked"] == LOCK_STATE_FINAL) or \
+							(self.user_ident.get_user_id() != data["db_user_id"] and self.user_ident.is_admin() == 0):
 						data["db_locked"] = LOCK_STATE_FINAL
 					self.barcode_add(data)
 			self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
@@ -230,7 +232,8 @@ class UIEditWindow(tk.Frame):
 		if command == "BARCODE_DEL_ALL":
 			for data, err in self.dbstorage.get_letters_list(self.reestr_info["db_reestr_id"]):
 				if err == "":
-					if self.reestr_info["db_locked"] == LOCK_STATE_FINAL:
+					if (self.reestr_info["db_locked"] == LOCK_STATE_FINAL) or \
+							(self.user_ident.get_user_id() != data["db_user_id"] and self.user_ident.is_admin() == 0):
 						data["db_locked"] = LOCK_STATE_FINAL
 					self.barcode_del(data)
 			self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
