@@ -195,7 +195,7 @@ class UIEditWindow(tk.Frame):
 				else:
 					logging.error(err)
 			from_info = copy(defconf.FROM_INFO)
-			uinf, err = self.dbstorage.get_user_info(letter_info["db_user_id"])
+			uinf, err = self.dbstorage.get_user_info(self.reestr_info["db_user_id"])
 			if err > "":
 				logging.error(err)
 			from_info["fio"] = UserIdentifier(uinf).get_fio()
