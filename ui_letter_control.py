@@ -34,3 +34,6 @@ class UILetterControl(tk.Frame):
 	def onClickPrint(self):
 		if self.action_callback:
 			self.action_callback("PRINT_ALL", None)
+	def disable(self):
+		self.btn_add_barcodes["state"] = "disabled"
+		self.btn_del_barcodes["state"] = "disabled"
