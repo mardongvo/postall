@@ -69,6 +69,9 @@ dump_sql(sql, out, db)
 sql = sql_table("USER_DICT", dict_to_fields(defconf.USER_DB_FIELDS) )
 dump_sql(sql, out, db)
 ###
+sql = sql_table("POSTINDEX", dict_to_fields(defconf.POSTINDEX_DB_FIELDS) )
+dump_sql(sql, out, db)
+###
 if out:
 	out.close()
 if db:
