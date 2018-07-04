@@ -12,6 +12,7 @@ import configuration as defconf
 import logging
 import os
 from copy import copy
+from os.path import join
 
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 
@@ -28,7 +29,9 @@ for k,v in defconf.LETTER_DEFAULT.iteritems():
 		contragent_struct[k] = v
 db.add_field_map("CONTRAGENT_DICT", contragent_struct)
 
-pc = PostConnector(requests.Session())
+sess = requests.Session()
+sess.verify = join(os.getcwd(),"cacert.pem") #необходимо для проверок сертификатов https
+pc = PostConnector(sess)
 pc.set_parameters(token=defconf.ACCESS_TOKEN, login_password=defconf.LOGIN_PASSWORD, proxyurl=None)
 
 root = Tk()
