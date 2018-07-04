@@ -240,5 +240,11 @@ class UIEditWindow(tk.Frame):
 			if err > "":
 				logging.error(err)
 			self.refresh()
+		if command == "POSTINDEX":
+			pinf, err = self.dbstorage.get_postindex_info(letter_info["postindex"])
+			if err > "":
+				logging.error(err)
+			else:
+				return pinf
 		if command == "REFRESH":
 			self.refresh()

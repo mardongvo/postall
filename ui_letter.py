@@ -116,19 +116,16 @@ class UILetter(tk.Frame):
 		if (event.char>'') or (event.keysym=="Delete") or (event.keysym=="BackSpace"):
 			self.onEntryUpdate(event)
 			if self.index_widget:
-				index = self.index_widget.get()
-				#TODO: get region, area, city
-				#print("find index "+index)
-				#cur = self.connection.cursor()
-				#cur.execute("select region, city from POSTINDEX where postindex=%s",(index,))
-				#for i in cur:
-				#	self.mlist_widgets[idd]['region'].delete(0,"end")
-				#	self.mlist_widgets[idd]['region'].insert("end", i[0])
-				#	#self.mlist_widgets[idd]['area'].delete(0,"end")
-				#	#self.mlist_widgets[idd]['area'].insert("end", i[1])
-				#	self.mlist_widgets[idd]['city'].delete(0,"end")
-				#	self.mlist_widgets[idd]['city'].insert("end", i[1])
-				#cur.close()
+				try:
+					postindex = int(self.index_widget.get())
+				except:
+					postindex = 0
+				if self.action_callback:
+					pinf = self.action_callback("POSTINDEX", {"postindex":postindex})
+					self.sync()
+					for k,v in pinf.iteritems():
+						self.letter_info[k] = v
+					self.set_data(self.letter_info)
 	def onClickSave(self):
 		""" Event - клик по кнопке Сохранить
 		"""

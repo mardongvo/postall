@@ -235,4 +235,6 @@ class DBStorage:
 			self._build_sql("REESTR_INFO", "UPDATE", {"db_reestr_id": reestr_id, "db_locked": state},
 							"db_reestr_id"), False)
 	def get_postindex_info(self, postindex):
-		return {}
+		for i in self._select_sql("POSTINDEX", self._build_sql("POSTINDEX", "SELECT", {"index-to":postindex}, "index_to")):
+			return i
+		return ({},u"")

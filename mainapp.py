@@ -28,6 +28,7 @@ for k,v in defconf.LETTER_DEFAULT.iteritems():
 	if k.endswith("-to"):
 		contragent_struct[k] = v
 db.add_field_map("CONTRAGENT_DICT", contragent_struct)
+db.add_field_map("POSTINDEX", defconf.POSTINDEX_DB_FIELDS)
 
 sess = requests.Session()
 sess.verify = join(os.getcwd(),"cacert.pem") #необходимо для проверок сертификатов https
