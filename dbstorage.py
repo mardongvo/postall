@@ -139,7 +139,7 @@ class DBStorage:
 		if not(isinstance(fromdate, datetime) and isinstance(todate, datetime)):
 			return [], u"Даты отбора реестров не являются объектом datetime"
 		res = []
-		for i in self._select_sql("REESTR_INFO", "select REESTR_INFO.*, coalesce(USER_DICT.fio,'') fio from REESTR_INFO left outer join USER_DICT on REESTR_INFO.db_user_id=USER_DICT.db_user_id where db_create_date between %s and %s order by db_create_date desc, db_reestr_id;" % (value2str(fromdate),value2str(todate)), filter_fields=False):
+		for i in self._select_sql("REESTR_INFO", "select REESTR_INFO.*, coalesce(USER_DICT.fio,'') fio from REESTR_INFO left outer join USER_DICT on REESTR_INFO.db_user_id=USER_DICT.db_user_id where db_create_date between %s and %s order by db_create_date desc, db_reestr_id desc;" % (value2str(fromdate),value2str(todate)), filter_fields=False):
 			res.append(i)
 		return res
 	def get_letters_list(self, reestr_id):
