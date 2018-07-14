@@ -31,9 +31,14 @@ db.add_field_map("CONTRAGENT_DICT", contragent_struct)
 db.add_field_map("POSTINDEX", defconf.POSTINDEX_DB_FIELDS)
 
 sess = requests.Session()
-sess.verify = join(os.getcwd(),"cacert.pem") #необходимо для проверок сертификатов https
+#в случае bundled приложения (py2exe,pyInstaller) есть атрибут frozen в sys
+#и требуется указать хранилище сертификатов для правильной работы HTTPS
+#при установленном requests хранилище находится в папке бибилиотеки
+if getattr(sys, "frozen", False):
+	sess.verify = join(os.getcwd(),"cacert.pem") #необходимо для проверок сертификатов https
+
 pc = PostConnector(sess)
-pc.set_parameters(token=defconf.ACCESS_TOKEN, login_password=defconf.LOGIN_PASSWORD, proxyurl=None)
+pc.set_parameters(token=defconf.ACCESS_TOKEN, login_password=defconf.LOGIN_PASSWORD, proxyurl=defconf.PROXY_URL)
 
 root = Tk()
 uinf, err = db.get_user_info(os.environ['USERNAME'])
