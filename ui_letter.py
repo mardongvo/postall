@@ -197,7 +197,7 @@ class UILetter(tk.Frame):
 				if c["edit"]:
 					c["widget"].config(state='normal')
 		if lock_state == LOCK_STATE_BACKLOG:
-			pass
+			self.btn_barcode["state"] = "normal"
 		if lock_state == LOCK_STATE_BATCH:
 			self.btn_print["state"] = "normal"
 			self.btn_barcode["state"] = "normal"
