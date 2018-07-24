@@ -69,8 +69,10 @@ class DBStorage:
 					 ' and '.join( map(lambda a: "%s=%s" % (self.key2field[tablename][a], value2str(data[a])), kk) ))
 		if command == "SELECT":
 			kk = filter(lambda a: a in self.key2field[tablename], data.keys())
-			sql = "SELECT * FROM %s where %s %s;" % \
-				  (tablename, ' and '.join( map(lambda a: "%s=%s" % (self.key2field[tablename][a], value2str(data[a])), kk) ), ("order by "+key_field) if key_field!=None else "" )
+			sql = "SELECT * FROM %s %s %s %s;" % \
+				  (tablename,
+				    "where " if len(kk)>0 else "",
+				    ' and '.join( map(lambda a: "%s=%s" % (self.key2field[tablename][a], value2str(data[a])), kk) ), ("order by "+key_field) if key_field!=None else "" )
 		return sql
 	def _run_sql(self, sql, need_return=False):
 		""" Функция выполнения sql, модифицирующих данные
@@ -238,3 +240,26 @@ class DBStorage:
 		for i in self._select_sql("POSTINDEX", self._build_sql("POSTINDEX", "SELECT", {"index-to":postindex}, "index_to")):
 			return i
 		return ({},u"")
+	def add_command(self, command_info):
+		""" Поместить команду в очередь (таблица COMMAND_QUEUE)
+		
+		:param command_info:
+		:return:
+		"""
+		return self._run_sql(self._build_sql("COMMAND_QUEUE","INSERT",command_info))
+	def get_command_list(self):
+		""" Получить команды из очереди (таблица COMMAND_QUEUE)
+		
+		:return:
+		"""
+		res = []
+		for i in self._select_sql("COMMAND_QUEUE", "select * from COMMAND_QUEUE order by uid"):
+			res.append(i)
+		return res
+	def delete_command(self, command_info):
+		""" Удалить команду из очереди (таблица COMMAND_QUEUE)
+		
+		:param command_info:
+		:return:
+		"""
+		return self._run_sql(self._build_sql("COMMAND_QUEUE", "DELETE", {"uid":command_info["uid"]}, "uid"), False)

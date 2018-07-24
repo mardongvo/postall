@@ -7,16 +7,18 @@ from ui_scrollframe import UIScrollFrame
 from datetime import datetime, timedelta
 from dbstorage import LOCK_STATE_FINAL, LOCK_STATE_BATCH, LOCK_STATE_FREE
 from ui_edit_window import UIEditWindow
+import commands
 import logging
 
 class UIMainWindow(tk.Frame):
 	"""UI класс главное окно
 	"""
-	def __init__(self, master, postconn, dbstorage, user_ident):
+	def __init__(self, master, postconn, dbstorage, user_ident, use_daemon):
 		#
 		self.postconn = postconn
 		self.dbstorage = dbstorage
 		self.user_ident = user_ident
+		self.use_daemon = use_daemon
 		self.rowcount = 0
 		#self.reestr_list = []
 		#
@@ -82,16 +84,10 @@ class UIMainWindow(tk.Frame):
 				logging.error(err)
 			self.refresh()
 		if command == "DATE":
-			if reestr_info["db_locked"] == LOCK_STATE_BATCH:
-				err = self.postconn.modify_batch(reestr_info["batch-name"], reestr_info["list-number-date"])
-				if err == "":
-					self.dbstorage.modify_reestr(reestr_info)
-				else:
-					logging.error(err)
-			if reestr_info["db_locked"] == LOCK_STATE_FREE:
-				err = self.dbstorage.modify_reestr(reestr_info)
-				if err > "":
-					logging.error(err)
+			if self.use_daemon:
+				self.dbstorage.add_command({"command":"DATE", "db_reestr_id":reestr_info["db_reestr_id"], "reestr_date":reestr_info["list-number-date"], "db_user_id": self.user_ident.get_user_id()})
+			else:
+				commands.set_date(self.dbstorage, self.postconn, reestr_info, reestr_info["list-number-date"])
 			self.refresh()
 		if command == "LOCK":
 			res,err = self.dbstorage.lock_reestr(reestr_info["db_reestr_id"], LOCK_STATE_FINAL)

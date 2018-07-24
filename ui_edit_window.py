@@ -8,6 +8,7 @@ from ui_letter_control import UILetterControl
 from dbstorage import LOCK_STATE_FINAL, LOCK_STATE_FREE, LOCK_STATE_BACKLOG, LOCK_STATE_BATCH
 from user_identifier import UserIdentifier
 from envelope_render import render_DL_letters
+import commands
 import os
 from copy import copy
 import configuration as defconf
@@ -16,11 +17,12 @@ import logging
 class UIEditWindow(tk.Frame):
 	"""UI класс главное окно
 	"""
-	def __init__(self, master, postconn, dbstorage, user_ident, reestr_info):
+	def __init__(self, master, postconn, dbstorage, user_ident, reestr_info, use_daemon):
 		#
 		self.postconn = postconn
 		self.dbstorage = dbstorage
 		self.user_ident = user_ident
+		self.use_daemon = use_daemon
 		self.rowcount = 0
 		self.reestr_info = reestr_info
 		#
@@ -74,89 +76,6 @@ class UIEditWindow(tk.Frame):
 				self.rowcount += 1
 			else:
 				logging.error(err)
-	def barcode_add(self, letter_info):
-		self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
-		if err > "":
-			logging.error(err)
-			return
-		if self.reestr_info["db_locked"] == LOCK_STATE_FINAL: return
-		#1. необходимо добавить в новые
-		if letter_info["db_locked"] == LOCK_STATE_FREE:
-			#копируем постоянные поля
-			for k, v in defconf.LETTER_CONSTANT_FIELDS.iteritems():
-				letter_info[k] = v
-			#комментарий к отправлению - <ФИО>, <комментарий из письма>
-			uinf, err = self.dbstorage.get_user_info(letter_info["db_user_id"])
-			if err > "":
-				logging.error(err)
-			letter_info["order-num"] = UserIdentifier(uinf).get_fio() + u", " + letter_info["comment"]
-			#добавлени в "новые" в кабинете
-			idd, err = self.postconn.add_backlog(letter_info)
-			if err > "":
-				logging.error(err)
-			letter_info["db_last_error"] = err
-			letter_info["id"] = idd
-			if idd > 0: #если прошло успешно
-				letter_info["db_locked"] = LOCK_STATE_BACKLOG
-			self.dbstorage.modify_letter(letter_info)
-		#2. перенести из новых в пакет; создать пакет, если его нет
-		if letter_info["db_locked"] == LOCK_STATE_BACKLOG:
-			# если пакета нет
-			if self.reestr_info["batch-name"] == "":
-				batch_info, err = self.postconn.add_batch(self.reestr_info["list-number-date"], [letter_info["id"]])
-				letter_info["db_last_error"] = err[letter_info["id"]]
-				if letter_info["db_last_error"] > "":
-					self.dbstorage.modify_letter(letter_info) #сохраняем ошибку
-				#если добавление пакета прошло успешно
-				if "batch-name" in batch_info:
-					if letter_info["db_last_error"] == "":
-						inf, err = self.postconn.get_backlog(letter_info["id"]) #получаем информацию о заказе
-						if err > "":
-							logging.error(err)
-						letter_info["db_last_error"] = err
-						if letter_info["db_last_error"] == "":
-							letter_info["db_locked"] = LOCK_STATE_BATCH
-							letter_info["barcode"] = inf["barcode"]
-					self.dbstorage.modify_letter(letter_info)
-					#сохраняем реестр
-					self.reestr_info["batch-name"] = batch_info["batch-name"]
-					self.reestr_info["db_locked"] = LOCK_STATE_BATCH
-					self.dbstorage.modify_reestr(self.reestr_info)
-			else: #если пакет есть
-				#добавляем в пакет
-				err = self.postconn.add_backlog_to_batch(self.reestr_info["batch-name"], letter_info["id"])
-				if err > "":
-					letter_info["db_last_error"] = err
-					logging.error(err)
-				else:
-					inf, err = self.postconn.get_backlog(letter_info["id"]) #получаем информацию о заказе
-					letter_info["db_last_error"] = err
-					if err > "":
-						logging.error(err)
-					if letter_info["db_last_error"] == "":
-						letter_info["db_locked"] = LOCK_STATE_BATCH
-						letter_info["barcode"] = inf["barcode"]
-				self.dbstorage.modify_letter(letter_info)
-	def barcode_del(self, letter_info):
-		self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
-		if err > "":
-			logging.error(err)
-			return
-		if self.reestr_info["db_locked"] == LOCK_STATE_FINAL: return
-		# удаляем письмо из новых
-		for idd, err in self.postconn.remove_backlogs([letter_info["id"]]):
-			linf = {"db_letter_id": letter_info["db_letter_id"], "db_locked": LOCK_STATE_FREE, "id": 0,
-					"db_last_error": err, "barcode": "", "db_reestr_id": letter_info["db_reestr_id"]}
-			if err > "":
-				logging.error(err)
-			self.dbstorage.modify_letter(linf)
-		# удаляем письмо из пакетов
-		for idd, err in self.postconn.remove_backlogs_from_shipment([letter_info["id"]]):
-			linf = {"db_letter_id": letter_info["db_letter_id"], "db_locked": LOCK_STATE_FREE, "id": 0,
-					"db_last_error": err, "barcode": "", "db_reestr_id": letter_info["db_reestr_id"]}
-			if err > "":
-				logging.error(err)
-			self.dbstorage.modify_letter(linf)
 	def action_letter(self, command, letter_info, contagent_info={ }):
 		""" Callback функция для обработки действий в форме добавления и в письме
 		
@@ -207,35 +126,37 @@ class UIEditWindow(tk.Frame):
 				logging.error(err)
 			self.refresh()
 		if command == "BARCODE_ADD":
-			self.barcode_add(letter_info)
+			if self.use_daemon:
+				self.dbstorage.add_command({"command":"BARCODE_ADD", "db_reestr_id":letter_info["db_reestr_id"], "db_letter_id":letter_info["db_letter_id"], "db_user_id": self.user_ident.get_user_id()})
+			else:
+				commands.barcode_add(self.dbstorage, self.postconn, self.reestr_info, letter_info)
 			self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
 			if err > "":
 				logging.error(err)
 			self.refresh()
 		if command == "BARCODE_DEL":
-			self.barcode_del(letter_info)
+			if self.use_daemon:
+				self.dbstorage.add_command({"command":"BARCODE_DEL", "db_reestr_id":letter_info["db_reestr_id"], "db_letter_id":letter_info["db_letter_id"], "db_user_id": self.user_ident.get_user_id()})
+			else:
+				commands.barcode_del(self.dbstorage, self.postconn, self.reestr_info, letter_info)
 			self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
 			if err > "":
 				logging.error(err)
 			self.refresh()
 		if command == "BARCODE_ADD_ALL":
-			for data, err in self.dbstorage.get_letters_list(self.reestr_info["db_reestr_id"]):
-				if err == "":
-					if (self.reestr_info["db_locked"] == LOCK_STATE_FINAL) or \
-							(self.user_ident.get_user_id() != data["db_user_id"] and self.user_ident.is_admin() == 0):
-						data["db_locked"] = LOCK_STATE_FINAL
-					self.barcode_add(data)
+			if self.use_daemon:
+				self.dbstorage.add_command({"command":"BARCODE_ADD_ALL", "db_reestr_id":letter_info["db_reestr_id"],  "db_user_id": self.user_ident.get_user_id()})
+			else:
+				commands.barcode_add_all(self.dbstorage, self.postconn, self.reestr_info, self.user_ident)
 			self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
 			if err > "":
 				logging.error(err)
 			self.refresh()
 		if command == "BARCODE_DEL_ALL":
-			for data, err in self.dbstorage.get_letters_list(self.reestr_info["db_reestr_id"]):
-				if err == "":
-					if (self.reestr_info["db_locked"] == LOCK_STATE_FINAL) or \
-							(self.user_ident.get_user_id() != data["db_user_id"] and self.user_ident.is_admin() == 0):
-						data["db_locked"] = LOCK_STATE_FINAL
-					self.barcode_del(data)
+			if self.use_daemon:
+				self.dbstorage.add_command({"command":"BARCODE_DEL_ALL", "db_reestr_id":letter_info["db_reestr_id"],  "db_user_id": self.user_ident.get_user_id()})
+			else:
+				commands.barcode_del_all(self.dbstorage, self.postconn, self.reestr_info, self.user_ident)
 			self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
 			if err > "":
 				logging.error(err)

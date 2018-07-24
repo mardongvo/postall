@@ -72,6 +72,10 @@ dump_sql(sql, out, db)
 sql = sql_table("POSTINDEX", dict_to_fields(defconf.POSTINDEX_DB_FIELDS) )
 dump_sql(sql, out, db)
 ###
+if defconf.USE_DAEMON:
+	sql = sql_table("COMMAND_QUEUE", ["uid serial", "command varchar(20)","db_reestr_id integer unique","db_letter_id integer","reestr_date date", "db_user_id text"])
+	dump_sql(sql, out, db)
+###
 if out:
 	out.close()
 if db:
