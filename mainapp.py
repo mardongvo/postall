@@ -50,7 +50,7 @@ if (err > "") or len(uinf)==0:
 	uinf = {"db_user_id":os.environ['USERNAME'], "fio":"", "is_admin":0}
 uid = UserIdentifier(uinf)
 
-app = UIMainWindow(root, pc, db, uid)
+app = UIMainWindow(root, pc, db, uid, defconf.USE_DAEMON)
 app.pack(fill="both", expand=True)
 app.refresh()
 root.wm_title(u"ПОЧТА")

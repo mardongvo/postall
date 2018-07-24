@@ -76,7 +76,7 @@ class UIMainWindow(tk.Frame):
 				logging.error(err)
 			self.refresh()
 		if command == "EDIT":
-			w = UIEditWindow(tk.Toplevel(self.master), self.postconn, self.dbstorage, self.user_ident, reestr_info)
+			w = UIEditWindow(tk.Toplevel(self.master), self.postconn, self.dbstorage, self.user_ident, reestr_info, self.use_daemon)
 			w.pack(fill="both", expand=True)
 		if command == "DELETE":
 			res,err = self.dbstorage.delete_reestr(reestr_info)
