@@ -16,6 +16,12 @@ def value2str(v):
 		return "'%s'" % (v.replace("'","''"),)
 	raise Exception("value2str: unknown type")
 
+def exception2str(e):
+	if isinstance(e.message, str):
+		return e.message.decode("UTF-8")
+	if isinstance(e.message, unicode):
+		return e.message
+
 LOCK_STATE_FREE = 0		#состояние редактирования
 LOCK_STATE_BACKLOG = 1	#заказ подготовлен, редактирование недоступно, доступно удаление заказа
 LOCK_STATE_BATCH = 2	#заказ перенесен, редактирование недоступно, удаление заказа недоступно
@@ -104,7 +110,7 @@ class DBStorage:
 				res = 0
 			else:
 				res = False
-			error += unicode(e)
+			error += exception2str(e)
 		return res, error
 	def _select_sql(self, tablename, sql, filter_fields=True):
 		error = ""
@@ -126,7 +132,7 @@ class DBStorage:
 						res[fldname] = v
 				yield res, ""
 		except Exception as e:
-			error += unicode(e)
+			error += exception2str(e)
 			yield None, error
 	def get_user_info(self, userid):
 		for i in self._select_sql("USER_DICT", "select * from USER_DICT where db_user_id=%s;" % (value2str(userid),)):
