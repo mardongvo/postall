@@ -72,7 +72,7 @@ class PostConnector:
 		return idd, error
 	def get_backlog(self, backlog_id):
 		""" Получение информации по заказу
-		https://otpravka.pochta.ru/specification#/orders-search_order_byid
+		https://otpravka.pochta.ru/specification#/batches-find_order_by_id
 		backlog_id - идентификатор заказа
 		"""
 		error = ""
