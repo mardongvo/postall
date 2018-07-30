@@ -50,25 +50,25 @@ class DBStorage:
 		# фильтрация - убираем неизвестные поля и ключевое поле
 		sql = ""
 		if command == "INSERT":
-			kk = filter(lambda a: a in self.key2field[tablename] or a == key_field, data.keys())
+			kk = sorted(filter(lambda a: a in self.key2field[tablename] or a == key_field, data.keys()))
 			sql = "insert into %s(%s) values (%s) returning %s;" %\
 				  	( tablename,
 					','.join( map(lambda a: self.key2field[tablename][a], kk) ),
 					','.join( map(lambda a: value2str(data[a]), kk) ),
 					key_field)
 		if command == "UPDATE":
-			kk = filter(lambda a: a in self.key2field[tablename] or a == key_field, data.keys())
+			kk = sorted(filter(lambda a: a in self.key2field[tablename] or a == key_field, data.keys()))
 			sql = "UPDATE %s set %s where %s=%s;" % \
 				  	(tablename,
 					','.join( map(lambda a: "%s=%s" % (self.key2field[tablename][a], value2str(data[a])), kk) ),
 					 key_field, value2str(data[key_field]))
 		if command == "DELETE":
-			kk = filter(lambda a: a in self.key2field[tablename], data.keys())
+			kk = sorted(filter(lambda a: a in self.key2field[tablename], data.keys()))
 			sql = "DELETE FROM %s where %s;" % \
 				  	(tablename,
 					 ' and '.join( map(lambda a: "%s=%s" % (self.key2field[tablename][a], value2str(data[a])), kk) ))
 		if command == "SELECT":
-			kk = filter(lambda a: a in self.key2field[tablename], data.keys())
+			kk = sorted(filter(lambda a: a in self.key2field[tablename], data.keys()))
 			sql = "SELECT * FROM %s %s %s %s;" % \
 				  (tablename,
 				    "where " if len(kk)>0 else "",
