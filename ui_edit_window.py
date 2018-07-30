@@ -110,7 +110,7 @@ class UIEditWindow(tk.Frame):
 		if command == "PRINT_ALL":
 			lts = []
 			for data, err in self.dbstorage.get_letters_list(self.reestr_info["db_reestr_id"]):
-				if err == "":
+				if err == "" and data["db_locked"]==LOCK_STATE_BATCH:
 					lts.append(data)
 				else:
 					logging.error(err)
