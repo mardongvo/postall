@@ -85,7 +85,6 @@ def daemon_mainloop(dbstorage, postconn, poolsize=10):
 					curr_commands.add(cmd["uid"])
 					if cmd["uid"] not in commands_in_process: #предотвращаем повторную обработку команды
 						work_pool.apply_async(dowork, (dbstorage, postconn, cmd))
-						commands_in_process.add(cmd["uid"])
 				else:
 					logging.error("Daemon::main_loop::get_command_list>>"+err)
 			commands_in_process = curr_commands
