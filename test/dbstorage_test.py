@@ -19,10 +19,14 @@ class MockCursor:
 		return ()
 
 class MockDB:
-	def __init__(self, cursor_class):
+	def __init__(self, cursor_class, msg=None):
 		self.cursor_class = cursor_class
+		self.msg = msg
 	def cursor(self):
-		return self.cursor_class()
+		if self.msg == None:
+			return self.cursor_class()
+		else:
+			return self.cursor_class(self.msg)
 	def commit(self):
 		pass
 	def rollback(self):
@@ -32,6 +36,14 @@ class CursorErr(MockCursor):
 	rowcount = 1
 	def execute(self, sql, param=None):
 		raise Exception('common exception')
+
+class CursorErrUnicode(MockCursor):
+	rowcount = 1
+	def __init__(self, msg=""):
+		MockCursor.__init__(self)
+		self.msg = msg
+	def execute(self, sql, param=None):
+		raise Exception(self.msg)
 
 class CursorPrint(MockCursor):
 	rowcount = 0
@@ -76,6 +88,18 @@ class test_DB(unittest.TestCase):
 		for i in test_cases:
 			self.assertTrue(self.db._build_sql("TESTTABLE", i[0], v, "db_int") == i[1])
 		#print(self.db._build_sql("TESTTABLE", "SELECT", {}, "db_int"))
+	def test_unicode_exception(self):
+		test_cases = [
+			('test',u'test'),
+			(u'test ТЕСТ',u'test ТЕСТ'),
+			('test ТЕСТ', u'test ТЕСТ')
+		]
+		for msg0,msg1 in test_cases:
+			connobj = MockDB(CursorErrUnicode, msg0)
+			db = DBStorage(connobj)
+			db.add_field_map("COMMAND_QUEUE", defconf.COMMAND_DB_FIELDS)
+			v,err = db.add_command({})
+			self.assertTrue(err == msg1)
 	#TODO: проверить value2str
 
 if __name__=='__main__':
