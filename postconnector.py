@@ -145,6 +145,8 @@ class PostConnector:
 			if len(backlog_ids)>1:
 				for bid in backlog_ids[1:]:
 					errors[bid] = self.add_backlog_to_batch(batch_name, bid)
+		else:
+			errors[bid] += u'Партия писем не создана'
 		return (batch_info, errors)
 	def modify_batch(self, batch_name, send_date):
 		"""Изменение дня отправки в почтовое отделение
