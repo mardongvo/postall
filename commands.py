@@ -4,91 +4,244 @@ import configuration as defconf
 import logging
 from dbstorage import LOCK_STATE_FINAL, LOCK_STATE_FREE, LOCK_STATE_BACKLOG, LOCK_STATE_BATCH
 from user_identifier import UserIdentifier
+from copy import deepcopy
+
+"""
+Схема обработки письма в функции barcode_add
+
+                        +----------------------------+
+                        |       STATE_START          |
+                        | вычисляем состояние письма |   +---+
+                        +-------------+--------------+--->ERR|
+                                      |                  +---+
+     +--------------------------------+---------------------------------+
+     |                                |                                 |
++----v----+                     +-----v---------+           +-----------v-----------+
+| STATE_0 |                     | STATE_1       |           | STATE_FF              |
+| новое   |                     | уже добавлено |           | действий не требуется |
++----+----+                     +-----+---------+           +-----------+-----------+
+     |                                |                                 |
++----v--------+                 +-----v---------------+                 |
+| STATE_ADD   <-----------------+ STATE_CHECK         |                 |
+| добавляем в |                 | проверить состояние |                 |
+| кабинет     |   +---+         | письма в кабинете   |   +---+         |
++----+--------+--->ERR|         +-----+------------+--+--->ERR|         |
+     |            +---+               |            |      +---+         |
+     |                                |            |                    |
+     |                                |            |                    |
++----v--------------+                 |            |     +--------------+
+| STATE_CHECK_BATCH <-----------------+            |     |
+| есть ли пакет     |   +---+                      |     |
+++--+---------------+--->ERR|                      |     |        x
+ |  |                   +---+                      |     |        xx----+
+ |  |                                              |     |        x     |
+ |  | +--------------------+                       |     |              |
+ |  | | STATE_CREATE_BATCH +----------+            |     |       +------v-------------+
+ |  +-> создать пакет      |   +---+  |            |     |       | ERR                |
+ |    +--------------------+--->ERR|  |            |     |       |                    |
+ |                             +---+  |            |     |   +---+ ERROR_PC           |
+ |    +--------------------+          |            |     |   |   | ошибка при работе  |
+ |    | STATE_ADD_TO_BATCH +----------+            |     |   |   | с кабинетом        |
+ +----> добавить в пакет   |   +---+  |            |     |   |   |                    |
+      +--------------------+--->ERR|  |            |     |   |   | ERROR_DB           |
+                               +---+  |            |     |   |   | ошибка при работе  |
+                                      |            |     |   |   | с БД               |
+               +----------------------+            |     |   |   +-------+------------+
+               |                                   |     |   |           |
+      +--------v---------------------+             |     |   |           |
+      | STATE_GET_INFO               |             |     |   |           |
+      | получаем информацию о письме |   +---+     |     |   |           |
+      +--------+---------------------+--->ERR|     |     |   |           |
+               |                         +---+     |     |   |           |
+               |                                   |     |   |           |
+      +--------v------------+                      |     |   |           |
+      | STATE_SAVE          <----------------------<---------+           |
+      | сохраняем письмо    |   +---+                    |               |
+      +--------+------------+--->ERR|                    |               |
+               |                +---+                    |               |
+               |                                         |               |
+      +--------v------------+                            |               |
+      |     STATE_END       <----------------------------+---------------+
+      +---------------------+
+"""
+
+STATE_START = 1
+STATE_0 = 2
+STATE_1 = 3
+STATE_FF = 4
+STATE_ADD = 5
+STATE_CHECK = 6
+STATE_CHECK_BATCH = 7
+STATE_CREATE_BATCH = 8
+STATE_ADD_TO_BATCH = 9
+STATE_GET_INFO = 10
+STATE_SAVE = 11
+STATE_END = 12
+ERROR_PC = 100 + 0
+ERROR_DB = 100 + 1
+_ERR_404 = "HTTP code: 404" #
 
 def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 	""" Добавление письма в кабинете сначала в новые, а потом в пакет
 	
-	:param reestr_info:
-	:param letter_info:
+	:param dbstorage: объект DBStorage
+	:param postconn: объект PostConnector
+	:param reestr_info: dict(), информация о реестре
+	:param letter_info: dict(), информация о письме
 	:return:
 	"""
-	reestr_info, err = dbstorage.get_reestr_info(reestr_info["db_reestr_id"])
-	if err > "":
-		logging.error("Commands:barcode_add::get_reestr_info>>"+err)
-		return
-	#если реестр заблокирован, ничего не делаем
-	if reestr_info["db_locked"] == LOCK_STATE_FINAL: return
-	#1. необходимо добавить письмо в новые
-	if letter_info["db_locked"] == LOCK_STATE_FREE:
-		#копируем постоянные поля
-		for k, v in defconf.LETTER_CONSTANT_FIELDS.iteritems():
-			letter_info[k] = v
-		#!!!
-		#комментарий к отправлению должен быть - <ФИО>, <комментарий из письма>
-		uinf, err = dbstorage.get_user_info(letter_info["db_user_id"])
-		if err > "":
-			logging.error("Commands:barcode_add::get_user_info>>"+err)
-		letter_info["order-num"] = UserIdentifier(uinf).get_fio() + u", " + letter_info["comment"]
-		#добавление в "новые" в кабинете
-		idd, err = postconn.add_backlog(letter_info)
-		if err > "":
-			logging.error("Commands:barcode_add::add_backlog>>"+err)
-		letter_info["db_last_error"] = err
-		letter_info["id"] = idd
-		if idd > 0: #если добавление в новые прошло успешно
-			letter_info["db_locked"] = LOCK_STATE_BACKLOG
-		res, err = dbstorage.modify_letter(letter_info)
-		if err > "":
-			logging.error("Commands:barcode_add::modify_letter>>" + err)
-	#2. перенести из новых в пакет; создать пакет, если его нет
-	if letter_info["db_locked"] == LOCK_STATE_BACKLOG:
-		# если пакета нет - пытаемся создать новый
-		if reestr_info["batch-name"] == "":
-			batch_info, err = postconn.add_batch(reestr_info["list-number-date"], [letter_info["id"]])
+	_state = STATE_START
+	_error = ""
+	_reestr = deepcopy(reestr_info)
+	_letter = deepcopy(letter_info)
+	while True:
+		########################
+		if _state == STATE_START:
+			_reestr, err = dbstorage.get_reestr_info(_reestr["db_reestr_id"])
 			if err > "":
-				logging.error("Commands:barcode_add::add_batch>>" + err)
-			letter_info["db_last_error"] = err[letter_info["id"]]
-			if letter_info["db_last_error"] > "":
-				res, err = dbstorage.modify_letter(letter_info) #сохраняем ошибку
-				if err > "":
-					logging.error("Commands:barcode_add::modify_letter>>" + err)
-			#если добавление пакета прошло успешно
-			if "batch-name" in batch_info:
-				if letter_info["db_last_error"] == "":
-					inf, err = postconn.get_backlog(letter_info["id"]) #получаем информацию о заказе
-					if err > "":
-						logging.error("Commands:barcode_add::get_backlog>>" + err)
-					letter_info["db_last_error"] = err
-					if letter_info["db_last_error"] == "":
-						letter_info["db_locked"] = LOCK_STATE_BATCH
-						letter_info["barcode"] = inf["barcode"]
-				res, err = dbstorage.modify_letter(letter_info)
-				if err > "":
-					logging.error("Commands:barcode_add::modify_letter>>" + err)
-				#сохраняем реестр
-				reestr_info["batch-name"] = batch_info["batch-name"]
-				reestr_info["db_locked"] = LOCK_STATE_BATCH
-				res, err = dbstorage.modify_reestr(reestr_info)
-				if err > "":
-					logging.error("Commands:barcode_add::modify_reestr>>" + err)
-		else: #если пакет уже есть
-			#добавляем в пакет
-			err = postconn.add_backlog_to_batch(reestr_info["batch-name"], letter_info["id"])
+				_error = "barcode_add:(STATE_START):get_reestr_info>>"+err
+				_state = ERROR_DB
+				continue
+			#если реестр заблокирован, ничего не делаем
+			if (_reestr["db_locked"] == LOCK_STATE_FINAL) or \
+					(_letter["db_locked"] == LOCK_STATE_BATCH):
+				_state = STATE_FF
+				continue
+			if _letter["db_locked"] == LOCK_STATE_BACKLOG:
+				_state = STATE_1
+				continue
+			if _letter["db_locked"] == LOCK_STATE_FREE:
+				_state = STATE_0
+				continue
+		########################
+		if _state == STATE_0:
+			#копируем постоянные поля
+			for k, v in defconf.LETTER_CONSTANT_FIELDS.iteritems():
+				_letter[k] = v
+			#!!!
+			#комментарий к отправлению должен быть - <ФИО>, <комментарий из письма>
+			uinf, err = dbstorage.get_user_info(_letter["db_user_id"])
 			if err > "":
-				letter_info["db_last_error"] = err
-				logging.error("Commands:barcode_add::add_backlog_to_batch>>" + err)
+				_error = "barcode_add:(STATE_0):get_user_info>>"+err
+				_state = ERROR_DB
+				continue
+			_letter["order-num"] = UserIdentifier(uinf).get_fio() + u", " + _letter["comment"]
+			_state = STATE_ADD
+			continue
+		########################
+		if _state == STATE_1:
+			_state = STATE_CHECK
+			continue
+		########################
+		if _state == STATE_FF:
+			_state = STATE_END
+			continue
+		########################
+		if _state == STATE_ADD:
+			idd, err = postconn.add_backlog(_letter)
+			if (err > "") or (idd == 0):
+				_error = "barcode_add:(STATE_ADD):add_backlog>>" + err
+				_state = ERROR_PC
+				continue
+			_letter["id"] = idd
+			_letter["db_locked"] = LOCK_STATE_BACKLOG
+			res, err = dbstorage.modify_letter(_letter)
+			if err > "":
+				_error = "barcode_add:(STATE_ADD):modify_letter>>" + err
+				_state = ERROR_DB
+				continue
+			_state = STATE_CHECK_BATCH
+			continue
+		########################
+		if _state == STATE_CHECK:
+			o0, err0 = postconn.get_backlog(_letter["id"], 0)
+			o1, err1 = postconn.get_backlog(_letter["id"], 1)
+			#письмо нигде не найдено
+			if (err0 == _ERR_404) and (err1 == _ERR_404):
+				_letter["id"] = 0
+				_letter["db_locked"] = LOCK_STATE_FREE
+				_state = STATE_ADD
+				continue
+			#письмо найдено в новых
+			if (err0 == "") and (err1 == _ERR_404):
+				_state = STATE_CHECK_BATCH
+				continue
+			#письмо найдено в пакете
+			if (err0 == _ERR_404) and (err1 == ""):
+				_letter["barcode"] = o1["barcode"]
+				_letter["db_locked"] = LOCK_STATE_BATCH
+				_state = STATE_SAVE
+				continue
+			_error = "barcode_add:(STATE_CHECK)>>" + err0 + "," + err1
+			_state = ERROR_PC
+			continue
+		########################
+		if _state == STATE_CHECK_BATCH:
+			#TODO: нужна ли проверка существования пакета на сайте?
+			if _reestr["batch-name"] == "":
+				_state = STATE_CREATE_BATCH
+				continue
 			else:
-				# получаем информацию о заказе, чтобы сохранить штрих-код
-				inf, err = postconn.get_backlog(letter_info["id"])
-				letter_info["db_last_error"] = err
-				if err > "":
-					logging.error("Commands:barcode_add::get_backlog>>" + err)
-				else:
-					letter_info["db_locked"] = LOCK_STATE_BATCH
-					letter_info["barcode"] = inf["barcode"]
-			res, err = dbstorage.modify_letter(letter_info)
+				_state = STATE_ADD_TO_BATCH
+				continue
+		########################
+		if _state == STATE_CREATE_BATCH:
+			batch_info, err = postconn.add_batch(_reestr["list-number-date"], [_letter["id"]])
 			if err > "":
-				logging.error("Commands:barcode_add::modify_reestr>>" + err)
+				_error = "barcode_add:(STATE_CREATE_BATCH):add_batch>>" + err
+				_state = ERROR_PC
+				continue
+			#если добавление пакета прошло успешно
+			_reestr["batch-name"] = batch_info["batch-name"]
+			res, err = dbstorage.modify_reestr(_reestr)
+			if err > "":
+				_error = "barcode_add:(STATE_CREATE_BATCH):modify_reestr>>" + err
+				_state = ERROR_DB
+				continue
+			_state = STATE_GET_INFO
+			continue
+		########################
+		if _state == STATE_ADD_TO_BATCH:
+			err = postconn.add_backlog_to_batch(_reestr["batch-name"], _letter["id"])
+			if err > "":
+				_error = "barcode_add:(STATE_ADD_TO_BATCH):add_backlog_to_batch>>" + err
+				_state = ERROR_PC
+				continue
+			_state = STATE_GET_INFO
+			continue
+		########################
+		if _state == STATE_GET_INFO:
+			inf, err = postconn.get_backlog(_letter["id"], 1)
+			if err > "":
+				_error = "barcode_add:(STATE_GET_INFO):get_backlog>>" + err
+				_state = ERROR_PC
+				continue
+			_letter["barcode"] = inf["barcode"]
+			_letter["db_locked"] = LOCK_STATE_BATCH
+			_state = STATE_SAVE
+			continue
+		########################
+		if _state == STATE_SAVE:
+			res, err = dbstorage.modify_letter(_letter)
+			if err > "":
+				_error = "barcode_add:(STATE_SAVE):modify_letter>>" + err
+				_state = ERROR_DB
+				continue
+			_state = STATE_END
+			continue
+		########################
+		if _state == ERROR_PC:
+			_letter["db_last_error"] = _error
+			_state = STATE_SAVE
+			continue
+		########################
+		if _state == ERROR_DB:
+			logging.error(_error)
+			_state = STATE_END
+			continue
+		########################
+		if _state == STATE_END:
+			break
 
 def barcode_del(dbstorage, postconn, reestr_info, letter_info):
 	""" Удаление письма с сайта
