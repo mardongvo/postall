@@ -7,7 +7,9 @@ from datetime import datetime, date
 
 def extract_errors(obj):
 	"""Извлечение информации об ошибках из ответа json
-	obj -- объект типа словарь
+	
+	:param obj: dict()
+	:return: str
 	"""
 	res = ""
 	if ("errors" in obj) and len(obj["errors"]) > 0:
@@ -23,6 +25,18 @@ def extract_errors(obj):
 
 class PostConnector:
 	"""Класс реализации REST запросов на сервер почты
+	
+	При создании заказов/добавлении заказов в партию
+	обратите внимание, что сущесвуют следующие ошибки:
+	DIFFERENT_TRANSPORT_TYPE - Способы пересылки отправления и партии отличаются
+	DIFFERENT_MAIL_TYPE - Типы почтовых отправлений не совпадают
+	DIFFERENT_MAIL_CATEGORY - Категории почтовых отправления не совпадают
+	DIFFERENT_MAIL_RANK - Разряд отправления и партии отличаются
+	
+	Не смешивайте разные типы и категории в одном реестре
+	
+	Каждому кабинету Почты России на API устанавливается лимит запросов в сутки(?).
+	При превышении выдается ошибка 509
 	"""
 	def __init__(self, connobj):
 		"""Инициализация
@@ -32,7 +46,9 @@ class PostConnector:
 		self.proxy = None
 		self.access_token = ""
 		self.login_password = ""
-	def set_parameters(self, post_server=defconf.POST_SERVER, token=defconf.ACCESS_TOKEN, login_password=defconf.LOGIN_PASSWORD, proxyurl=defconf.PROXY_URL):
+		#если не пуст, производится фильтрация letter_info при добавлении в кабинет
+		self.letter_filter = set()
+	def set_parameters(self, post_server=defconf.POST_SERVER, token=defconf.ACCESS_TOKEN, login_password=defconf.LOGIN_PASSWORD, proxyurl=defconf.PROXY_URL, letter_filter = set()):
 		"""Установка параметров
 		
 		https://otpravka.pochta.ru/specification#/orders-creating_order
@@ -50,6 +66,7 @@ class PostConnector:
 			"Authorization": "AccessToken " + self.access_token,
 			"X-User-Authorization": "Basic " + self.login_password
 		}
+		self.letter_filter = letter_filter
 
 	def add_backlog(self, letter_info):
 		"""Добавление заказа
@@ -59,8 +76,12 @@ class PostConnector:
 		path = "/1.0/user/backlog"
 		error = ""
 		idd = 0
+		_letter = {}
+		for k in letter_info.keys():
+			if (k in self.letter_filter) or (len(self.letter_filter) == 0):
+				_letter[k] = letter_info[k]
 		try:
-			response = self.httpconn.put(self.post_server+path, headers=self.request_headers, data=json.dumps([letter_info]), proxies=self.proxy)
+			response = self.httpconn.put(self.post_server+path, headers=self.request_headers, data=json.dumps([_letter]), proxies=self.proxy)
 			if response.status_code != requests.codes.OK:
 				raise Exception("HTTP code: "+str(response.status_code))
 			obj = json.loads(response.text)
@@ -70,15 +91,21 @@ class PostConnector:
 		except Exception as e:
 			error += str(e)
 		return idd, error
-	def get_backlog(self, backlog_id):
+	def get_backlog(self, backlog_id, source=1):
 		""" Получение информации по заказу
+		https://otpravka.pochta.ru/specification#/orders-search_order_byid
 		https://otpravka.pochta.ru/specification#/batches-find_order_by_id
 		backlog_id - идентификатор заказа
+		:param source: 0 - /1.0/backlog/{id}, 1 - /1.0/shipment/{id},
 		"""
 		error = ""
 		obj = {}
 		try:
-			path = "/1.0/shipment/%d" % (backlog_id,)
+			path = ""
+			if source == 0:
+				path = "/1.0/backlog/%d" % (backlog_id,)
+			if source == 1:
+				path = "/1.0/shipment/%d" % (backlog_id,)
 			response = self.httpconn.get(self.post_server+path, headers=self.request_headers, proxies=self.proxy)
 			if response.status_code != requests.codes.OK:
 				raise Exception("HTTP code: "+str(response.status_code))
@@ -146,7 +173,7 @@ class PostConnector:
 				for bid in backlog_ids[1:]:
 					errors[bid] = self.add_backlog_to_batch(batch_name, bid)
 		else:
-			errors[bid] += u'Партия писем не создана'
+			errors[bid] += ("," if errors[bid]>"" else "") + u'Партия писем не создана'
 		return (batch_info, errors)
 	def modify_batch(self, batch_name, send_date):
 		"""Изменение дня отправки в почтовое отделение
