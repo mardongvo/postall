@@ -246,36 +246,49 @@ def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 def barcode_del(dbstorage, postconn, reestr_info, letter_info):
 	""" Удаление письма с сайта
 	
-	:param reestr_info:
-	:param letter_info:
+	:param dbstorage: объект DBStorage
+	:param postconn: объект PostConnector
+	:param reestr_info: dict(), информация о реестре
+	:param letter_info: dict(), информация о письме
 	:return:
 	"""
-	reestr_info, err = dbstorage.get_reestr_info(reestr_info["db_reestr_id"])
+	_error = ""
+	_reestr = deepcopy(reestr_info)
+	_letter = deepcopy(letter_info)
+	_reestr, err = dbstorage.get_reestr_info(reestr_info["db_reestr_id"])
 	if err > "":
-		logging.error("Commands:barcode_del::get_reestr_info>>" + err)
+		logging.error("barcode_del:():get_reestr_info>>" + err)
 		return
-	if reestr_info["db_locked"] == LOCK_STATE_FINAL: return
-	# удаляем письмо из новых
-	#TODO: сделать надежное удаление
-	for idd, err in postconn.remove_backlogs([letter_info["id"]]):
-		#TODO: возможны ли ситуации, в которых письмо с сайта не удаляется?
-		linf = {"db_letter_id": letter_info["db_letter_id"], "db_locked": LOCK_STATE_FREE, "id": 0,
-				"db_last_error": err, "barcode": "", "db_reestr_id": letter_info["db_reestr_id"]}
-		if err > "":
-			logging.error("Commands:barcode_del::remove_backlogs>>" + err)
-		res, err = dbstorage.modify_letter(linf)
-		if err > "":
-			logging.error("Commands:barcode_del::modify_letter>>" + err)
-	# удаляем письмо из пакетов
-	for idd, err in postconn.remove_backlogs_from_shipment([letter_info["id"]]):
-		# TODO: возможны ли ситуации, в которых письмо с сайта не удаляется?
-		linf = {"db_letter_id": letter_info["db_letter_id"], "db_locked": LOCK_STATE_FREE, "id": 0,
-				"db_last_error": err, "barcode": "", "db_reestr_id": letter_info["db_reestr_id"]}
-		if err > "":
-			logging.error("Commands:barcode_del::remove_backlogs_from_shipment>>" + err)
-		res, err = dbstorage.modify_letter(linf)
-		if err > "":
-			logging.error("Commands:barcode_del::modify_letter>>" + err)
+	if _reestr["db_locked"] == LOCK_STATE_FINAL: return
+	linf = {"db_letter_id": _letter["db_letter_id"],
+			"db_locked": _letter["db_locked"],
+			"id": _letter["id"],
+			"db_last_error": "",
+			"barcode": "",
+			"db_reestr_id": _letter["db_reestr_id"]}
+	del_result = [i[1] for i in postconn.remove_backlogs([_letter["id"]])] + \
+		[i[1] for i in postconn.remove_backlogs_from_shipment([_letter["id"]])]
+	if len(del_result) != 2:
+		logging.error("barcode_del:():len(del_result) != 2")
+	# письма нет на сайте
+	if (del_result[0] == _ERR_404) and (del_result[1] == _ERR_404):
+		linf["id"] = 0
+		linf["db_locked"] = LOCK_STATE_FREE
+	# письмо удалено
+	elif ( (del_result[0] == "") and (del_result[1] == _ERR_404) ) or \
+		 ( (del_result[0] == _ERR_404) and (del_result[1] == "")):
+		linf["id"] = 0
+		linf["db_locked"] = LOCK_STATE_FREE
+	# ошибка при удалении
+	else:
+		linf["db_last_error"] = \
+			(del_result[0] if (del_result[0] != "") and
+							  (del_result[0] != _ERR_404) else "") + \
+			(del_result[1] if (del_result[1] != "") and
+							  (del_result[1] != _ERR_404) else "")
+	res, err = dbstorage.modify_letter(linf)
+	if err > "":
+		logging.error("barcode_del:():modify_letter>>" + err)
 
 def set_date(dbstorage, postconn, reestr_info, batch_date):
 	""" Установить дату реестра. Если реестр уже есть на сайте, то и на сайте
