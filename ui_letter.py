@@ -96,7 +96,7 @@ class UILetter(tk.Frame):
 		self.btn_print.grid({"column":max(gridcol.values())+2, "row":0, "sticky":"NSEW"})
 		#
 		self.btn_delete = tk.Button(self, text=u"Удалить", command=self.onClickDelete, bg=COLORS[bgcolor][0])
-		self.btn_delete.grid({"column":max(gridcol.values())+1, "row":1, "sticky":"NSEW"})
+		self.btn_delete.grid({"column":max(gridcol.values())+2, "row":1, "sticky":"NSEW"})
 		#
 		self.btn_barcode = tk.Button(self, text=u"Получить номер", command=self.onClickBarcode, bg=COLORS[bgcolor][0])
 		self.btn_barcode.grid({"column":max(gridcol.values())+1, "row":2, "sticky":"NSEW", "columnspan":2})
