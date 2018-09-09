@@ -90,6 +90,7 @@ def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 	:param letter_info: dict(), информация о письме
 	:return:
 	"""
+	log = logging.getLogger("postall")
 	_state = STATE_START
 	_error = ""
 	_reestr = deepcopy(reestr_info)
@@ -236,7 +237,7 @@ def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 			continue
 		########################
 		if _state == ERROR_DB:
-			logging.error(_error)
+			log.error(_error)
 			_state = STATE_END
 			continue
 		########################
@@ -252,12 +253,13 @@ def barcode_del(dbstorage, postconn, reestr_info, letter_info):
 	:param letter_info: dict(), информация о письме
 	:return:
 	"""
+	log = logging.getLogger("postall")
 	_error = ""
 	_reestr = deepcopy(reestr_info)
 	_letter = deepcopy(letter_info)
 	_reestr, err = dbstorage.get_reestr_info(reestr_info["db_reestr_id"])
 	if err > "":
-		logging.error("barcode_del:():get_reestr_info>>" + err)
+		log.error("barcode_del:():get_reestr_info>>" + err)
 		return
 	if _reestr["db_locked"] == LOCK_STATE_FINAL: return
 	linf = {"db_letter_id": _letter["db_letter_id"],
@@ -269,7 +271,7 @@ def barcode_del(dbstorage, postconn, reestr_info, letter_info):
 	del_result = [i[1] for i in postconn.remove_backlogs([_letter["id"]])] + \
 		[i[1] for i in postconn.remove_backlogs_from_shipment([_letter["id"]])]
 	if len(del_result) != 2:
-		logging.error("barcode_del:():len(del_result) != 2")
+		log.error("barcode_del:():len(del_result) != 2")
 	# письма нет на сайте
 	if (del_result[0] == _ERR_404) and (del_result[1] == _ERR_404):
 		linf["id"] = 0
@@ -288,7 +290,7 @@ def barcode_del(dbstorage, postconn, reestr_info, letter_info):
 							  (del_result[1] != _ERR_404) else "")
 	res, err = dbstorage.modify_letter(linf)
 	if err > "":
-		logging.error("barcode_del:():modify_letter>>" + err)
+		log.error("barcode_del:():modify_letter>>" + err)
 
 def set_date(dbstorage, postconn, reestr_info, batch_date):
 	""" Установить дату реестра. Если реестр уже есть на сайте, то и на сайте
