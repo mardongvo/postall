@@ -277,8 +277,7 @@ def barcode_del(dbstorage, postconn, reestr_info, letter_info):
 		linf["id"] = 0
 		linf["db_locked"] = LOCK_STATE_FREE
 	# письмо удалено
-	elif ( (del_result[0] == "") and (del_result[1] == _ERR_404) ) or \
-		 ( (del_result[0] == _ERR_404) and (del_result[1] == "")):
+	elif (del_result[0] == "") or (del_result[1] == ""):
 		linf["id"] = 0
 		linf["db_locked"] = LOCK_STATE_FREE
 	# ошибка при удалении
