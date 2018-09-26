@@ -14,6 +14,15 @@ import os
 from copy import copy
 from os.path import join
 
+##### monkey patch for proxy
+import socket
+
+def do_nothing(*args):
+    return None
+socket.gethostbyaddr = do_nothing
+socket.gethostbyname = do_nothing
+#####
+
 logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 
 conn = psycopg2.connect(defconf.DB_CONNECTION)
