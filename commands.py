@@ -223,6 +223,7 @@ def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 			continue
 		########################
 		if _state == STATE_SAVE:
+			_letter["db_last_error"] = _error
 			res, err = dbstorage.modify_letter(_letter)
 			if err > "":
 				_error = "barcode_add:(STATE_SAVE):modify_letter>>" + err
