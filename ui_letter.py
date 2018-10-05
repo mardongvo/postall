@@ -203,6 +203,8 @@ class UILetter(tk.Frame):
 			self.btn_barcode["state"] = "normal"
 			self.btn_barcode["text"] = u'Удалить номер'
 		if lock_state == LOCK_STATE_FINAL:
+			if self.letter_info["barcode"] > "":
+				self.btn_print["state"] = "normal"
 			pass
 	def sync(self):
 		""" Перенсит данные из формы в letter_info
