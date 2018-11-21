@@ -309,7 +309,7 @@ def set_date(dbstorage, postconn, reestr_info, batch_date):
 			if err > "":
 				logging.error("Commands:set_date::modify_reestr>>" + err)
 	if reestr_info["db_locked"] == LOCK_STATE_FREE:
-		err = dbstorage.modify_reestr(reestr_info)
+		res, err = dbstorage.modify_reestr(reestr_info)
 		if err > "":
 			logging.error("Commands:set_date::modify_reestr>>" + err)
 
