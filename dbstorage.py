@@ -204,13 +204,27 @@ class DBStorage:
 		"""
 		return self._run_sql(self._build_sql("REESTR_INFO", "UPDATE", reestr_info,
 							"db_reestr_id"), False)
+	def _reestr_is_locked(self, reestr_id):
+		""" Проверяет реестр на блокировку
+		
+		:param reestr_id: - id реестра
+		:return: boolean
+		"""
+		ri, err = self.get_reestr_info(reestr_id)
+		if err > "":
+			return True
+		if ri["db_locked"] == LOCK_STATE_FINAL:
+			return True
+		return False
 	def add_letter(self, letter_info):
 		""" Добавление письма
 
 		:param letter_info: dict() - configuration.LETTER_DEFAULTS
 		:return: idd - integer, err - string
 		"""
-		#TODO: добавить проверку на статус реестра
+		#Проверяем статус реестра. Если заблокирован - ничего не делать
+		if self._reestr_is_locked(letter_info["db_reestr_id"]):
+			return 0, u""
 		res = self._run_sql(self._build_sql("LETTER_INFO", "INSERT", letter_info, "db_letter_id"), True)
 		self.sync_reestr(letter_info["db_reestr_id"])
 		return res
@@ -220,6 +234,9 @@ class DBStorage:
 		:param letter_info:
 		:return:
 		"""
+		#Проверяем статус реестра. Если заблокирован - ничего не делать
+		if self._reestr_is_locked(letter_info["db_reestr_id"]):
+			return 0, u""
 		res = self._run_sql(self._build_sql("LETTER_INFO", "UPDATE", letter_info, "db_letter_id"), False)
 		self.sync_reestr(letter_info["db_reestr_id"])
 		return res
@@ -227,6 +244,9 @@ class DBStorage:
 		""" Удаление письма, выполняется только для состояния LOCK_STATE_FREE
 		:param letter_info: dict() - configuration.LETTER_DEFAULTS
 		"""
+		#Проверяем статус реестра. Если заблокирован - ничего не делать
+		if self._reestr_is_locked(letter_info["db_reestr_id"]):
+			return 0, u""
 		res = self._run_sql(self._build_sql("LETTER_INFO", "DELETE", {"db_letter_id":letter_info["db_letter_id"],"db_locked":LOCK_STATE_FREE}, "db_letter_id"), False)
 		self.sync_reestr(letter_info["db_reestr_id"])
 		return res
@@ -235,6 +255,9 @@ class DBStorage:
 		:param letter_info: dict() - configuration.LETTER_DEFAULTS
 		:param state: -- LOCK_STATE_*
 		"""
+		#Проверяем статус реестра. Если заблокирован - ничего не делать
+		if self._reestr_is_locked(letter_info["db_reestr_id"]):
+			return 0, ""
 		return self._run_sql(
 			self._build_sql("LETTER_INFO", "UPDATE", {"db_letter_id": letter_info["db_letter_id"], "db_locked": state},
 							"db_letter_id"), False)
