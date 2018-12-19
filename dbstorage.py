@@ -6,6 +6,11 @@ def fix_json_field_name(field_name):
 	return field_name.replace("-","_")
 
 def value2str(v):
+	""" Преобразует python-значение в текст для последующей вставки в sql
+	
+	:param v:
+	:return: str/unicode
+	"""
 	if isinstance(v, bool):
 		return "TRUE" if v else "FALSE"
 	if isinstance(v, int):
