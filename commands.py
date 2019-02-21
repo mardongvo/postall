@@ -105,7 +105,8 @@ def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 				continue
 			#если реестр заблокирован, ничего не делаем
 			if (_reestr["db_locked"] == LOCK_STATE_FINAL) or \
-					(_letter["db_locked"] == LOCK_STATE_BATCH):
+				(_letter["db_locked"] == LOCK_STATE_FINAL) or \
+				(_letter["db_locked"] == LOCK_STATE_BATCH):
 				_state = STATE_FF
 				continue
 			if _letter["db_locked"] == LOCK_STATE_BACKLOG:
