@@ -10,31 +10,31 @@ from reportlab.platypus import Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, TA_LEFT, TA_CENTER
 import os
 import tempfile
-import configuration as defconf
 from base64 import standard_b64decode
 from io import BytesIO
 
-def render_DL_letters(letters, from_info=defconf.FROM_INFO):
+def render_DL_letters(letter_iterator):
 	""" Создает pdf файл во временной папке со страницами в виде конвертов DL
-	
-	:param letters: массив словарей
-	:param from_info: информация об отправителе configuration.FROM_INFO
+
+	:param letter_iterator: итератор, возвращающий кортеж (letter_info,
+	from_info)
 	:return: путь к файлу pdf
 	"""
-	#грязно, но обычно этот шрифт есть
+	# грязно, но обычно этот шрифт есть
 	pdfmetrics.registerFont(TTFont('TimesNewRoman', 'times.ttf'))
 	#
 	hndl, path = tempfile.mkstemp(suffix='.pdf')
-	#close handle
-	tmp = os.fdopen(hndl,'w')
+	#закрываем хэндл, иначе получим ошибку при открытии pdf файла
+	tmp = os.fdopen(hndl, 'w')
 	tmp.close()
-	#do draw
-	c = canvas.Canvas(path, pagesize=(220*mm, 110*mm))
-	for li in letters:
-		render_DL(c, li, from_info)
+	# do draw
+	c = canvas.Canvas(path, pagesize=(220 * mm, 110 * mm))
+	for letter_info, from_info  in letter_iterator:
+		render_DL(c, letter_info, from_info)
 		c.showPage()
 	c.save()
 	return path
+
 
 def render_DL(canv, letter_info, from_info):
 	barcode = letter_info["barcode"]

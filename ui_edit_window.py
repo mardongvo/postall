@@ -76,6 +76,30 @@ class UIEditWindow(tk.Frame):
 				self.rowcount += 1
 			else:
 				logging.error(err)
+
+	def letter_iterator(self, user_id=None):
+		""" Итератор по письмам реестра. Используется в выводе печатной формы
+		
+		:param user_id: string/None значение db_user_id, если требуется
+		отфильтровать письма по пользователю. None отключает фильтрацию
+		:return:
+		"""
+		for data, err in self.dbstorage.get_letters_list(
+				self.reestr_info["db_reestr_id"]):
+			if err != "":
+				logging.error(err)
+				continue
+			if data["db_locked"] != LOCK_STATE_BATCH:
+				continue
+			if (user_id != None) and (data["db_user_id"] != user_id):
+				continue
+			from_info = copy(defconf.FROM_INFO)
+			uinf, err = self.dbstorage.get_user_info(data["db_user_id"])
+			if err > "":
+				logging.error(err)
+			from_info["fio"] = UserIdentifier(uinf).get_fio()
+			yield (data, from_info)
+	
 	def action_letter(self, command, letter_info, contagent_info={ }):
 		""" Callback функция для обработки действий в форме добавления и в письме
 		
@@ -106,20 +130,15 @@ class UIEditWindow(tk.Frame):
 			if err > "":
 				logging.error(err)
 			from_info["fio"] = UserIdentifier(uinf).get_fio()
-			os.startfile(render_DL_letters([letter_info], from_info))
+			os.startfile(render_DL_letters([letter_info,
+													 from_info].__iter__()))
 		if command == "PRINT_ALL":
-			lts = []
-			for data, err in self.dbstorage.get_letters_list(self.reestr_info["db_reestr_id"]):
-				if err == "" and data["db_locked"]==LOCK_STATE_BATCH:
-					lts.append(data)
-				else:
-					logging.error(err)
-			from_info = copy(defconf.FROM_INFO)
-			uinf, err = self.dbstorage.get_user_info(self.reestr_info["db_user_id"])
-			if err > "":
-				logging.error(err)
-			from_info["fio"] = UserIdentifier(uinf).get_fio()
-			os.startfile(render_DL_letters(lts, from_info))
+			os.startfile(render_DL_letters(self.letter_iterator()))
+		if command == "PRINT_MY":
+			os.startfile(render_DL_letters(self.letter_iterator(
+				self.user_ident.get_user_id())
+				)
+			)
 		if command == "DELETE":
 			res,err = self.dbstorage.delete_letter(letter_info)
 			if err > "":
