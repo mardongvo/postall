@@ -130,8 +130,8 @@ class UIEditWindow(tk.Frame):
 			if err > "":
 				logging.error(err)
 			from_info["fio"] = UserIdentifier(uinf).get_fio()
-			os.startfile(render_DL_letters([letter_info,
-													 from_info].__iter__()))
+			os.startfile(render_DL_letters([(letter_info,
+													 from_info)].__iter__()))
 		if command == "PRINT_ALL":
 			os.startfile(render_DL_letters(self.letter_iterator()))
 		if command == "PRINT_MY":
