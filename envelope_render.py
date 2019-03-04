@@ -70,10 +70,13 @@ def render_DL(canv, letter_info, from_info):
 		P = Paragraph(i["text"], ps)
 		w,h = P.wrap(i["w"]*mm, i["h"]*mm)
 		P.drawOn(canv,i["x"]*mm,i["y"]*mm)
-	for i in range(len(dst_index)):
-		ii = dst_index[i]
-		if ii in ['0','1','2','3','4','5','6','7','8','9']:
-			canv.drawImage(ImageReader(BytesIO(standard_b64decode(_INDEX_IMAGES[ii]))), (20+9*i)*mm, 10*mm)
+	n = -1
+	for ind in dst_index:
+		n += 1
+		if ind not in _INDEX_IMAGES: continue
+		canv.drawImage(ImageReader(BytesIO(
+			standard_b64decode(_INDEX_IMAGES[ind]))),
+		(20+9*n)*mm, 10*mm)
 	#barcode
 	ift = common.I2of5(value = barcode, checksum=False, bearers=0, barWidth=0.35*mm, gap = 1*mm, barHeight=10*mm)
 	ift.drawOn(canv, 95*mm, 90*mm)
