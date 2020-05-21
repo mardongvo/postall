@@ -8,6 +8,7 @@ from ui_letter_control import UILetterControl
 from dbstorage import LOCK_STATE_FINAL, LOCK_STATE_FREE, LOCK_STATE_BACKLOG, LOCK_STATE_BATCH
 from user_identifier import UserIdentifier
 from envelope_render import render_DL_letters
+from notification_render import render_notifications
 import commands
 import os
 from copy import copy
@@ -139,6 +140,8 @@ class UIEditWindow(tk.Frame):
 				self.user_ident.get_user_id())
 				)
 			)
+		if command == "PRINT_NOTIFICATIONS":
+			os.startfile(render_notifications(self.letter_iterator()))
 		if command == "DELETE":
 			res,err = self.dbstorage.delete_letter(letter_info)
 			if err > "":
