@@ -20,6 +20,8 @@ class UIReestrAdd(tk.Frame):
              'row': 0},
             {'key': 'with-simple-notice', 'title': u'С уведомл.', 'type': 'bool', 'edit': True, 'maxsize': 10,
              'row': 0},
+            {'key': 'no-return', 'title': u'Без возврата', 'type': 'bool', 'edit': True, 'maxsize': 10,
+             'row': 0},
             {'key': 'db_comment', 'title': u'Комм.', 'type': 'text', 'edit': True, 'maxsize': 20, 'row': 0},
             {'key': 'fio', 'title': u'ФИО', 'type': 'text', 'edit': False, 'maxsize': 20, 'row': 0},
         ]

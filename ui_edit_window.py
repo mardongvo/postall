@@ -37,7 +37,8 @@ class UIEditWindow(tk.Frame):
 							"db_locked":LOCK_STATE_FREE,
 							"db_user_id": self.user_ident.get_user_id(),
 							"db_reestr_id": self.reestr_info["db_reestr_id"],
-							"with-simple-notice": self.reestr_info["with-simple-notice"]
+							"with-simple-notice": self.reestr_info["with-simple-notice"],
+							"no-return": self.reestr_info["no-return"]
 							},
 			action_callback=self.action_letter)
 		self.ui_add.config(bd=5, relief=tk.GROOVE)
