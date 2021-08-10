@@ -21,8 +21,14 @@ def datatype_to_sqltype(field_name, field_value, dbtype="postgres"):
 def dict_to_fields(inp_dict):
 	return map(lambda k: fix_json_field_name(k)+" "+datatype_to_sqltype(k, inp_dict[k]), inp_dict.keys() )
 
-def sql_table(tablename, fields):
-	return "create table if not exists %s(\n" % (tablename,) + ", \n".join( fields ) + ");\n"
+def sql_table(tablename, fields, alter=False):
+    if alter:
+        tmp = []
+        for fld in fields:
+            tmp.append("alter table %s add column %s;" % (tablename, fld))
+        return "\n".join(tmp)+"\n"
+    else:
+        return "create table if not exists %s(\n" % (tablename,) + ", \n".join( fields ) + ");\n"
 
 def dump_sql(sql, out, db):
 	if out:
@@ -52,28 +58,31 @@ if "database" in args:
 	import psycopg2
 	db = psycopg2.connect(args["database"])
 
+alter = False
+if "alter" in args:
+    alter = args["alter"]
 ###
-sql = sql_table("LETTER_INFO", dict_to_fields(defconf.LETTER_DB_FIELDS)+dict_to_fields(defconf.LETTER_DEFAULT) )
+sql = sql_table("LETTER_INFO", dict_to_fields(defconf.LETTER_DB_FIELDS)+dict_to_fields(defconf.LETTER_DEFAULT), alter )
 dump_sql(sql, out, db)
 ###
-sql = sql_table("REESTR_INFO", dict_to_fields(defconf.REESTR_DB_FIELDS) )
+sql = sql_table("REESTR_INFO", dict_to_fields(defconf.REESTR_DB_FIELDS), alter )
 dump_sql(sql, out, db)
 ###
 contragent_struct = copy.copy(defconf.CONTRAGENT_DB_FIELDS)
 for k,v in defconf.LETTER_DEFAULT.iteritems():
 	if k.endswith("-to"):
 		contragent_struct[k] = v
-sql = sql_table("CONTRAGENT_DICT", dict_to_fields(contragent_struct) )
+sql = sql_table("CONTRAGENT_DICT", dict_to_fields(contragent_struct), alter )
 dump_sql(sql, out, db)
 ###
-sql = sql_table("USER_DICT", dict_to_fields(defconf.USER_DB_FIELDS) )
+sql = sql_table("USER_DICT", dict_to_fields(defconf.USER_DB_FIELDS), alter )
 dump_sql(sql, out, db)
 ###
-sql = sql_table("POSTINDEX", dict_to_fields(defconf.POSTINDEX_DB_FIELDS) )
+sql = sql_table("POSTINDEX", dict_to_fields(defconf.POSTINDEX_DB_FIELDS), alter )
 dump_sql(sql, out, db)
 ###
 if defconf.USE_DAEMON:
-	sql = sql_table("COMMAND_QUEUE", ["uid serial", "command varchar(20)","db_reestr_id integer unique","db_letter_id integer","reestr_date date", "db_user_id text"])
+	sql = sql_table("COMMAND_QUEUE", ["uid serial", "command varchar(20)","db_reestr_id integer unique","db_letter_id integer","reestr_date date", "db_user_id text"], alter)
 	dump_sql(sql, out, db)
 ###
 if out:
