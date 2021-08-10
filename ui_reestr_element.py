@@ -29,7 +29,7 @@ class UIReestrElement(tk.Frame):
 			{'key': 'db_letter_count', 'title': u'Кол-во', 'type': 'integer', 'edit': False, 'maxsize': 10, 'row': 0},
 			{'key': 'with-simple-notice', 'title': u'С уведомл.', 'type': 'bool', 'edit': False, 'maxsize': 10,
 			 'row': 1},
-			{'key': '', 'title': u'', 'type': 'integer', 'edit': False, 'maxsize': 10, 'row': 0},
+			{'key': 'mail-category', 'title': u'Катег.', 'type': 'text', 'edit': False, 'maxsize': 10, 'row': 0},
 			{'key': 'no-return', 'title': u'Без возврата', 'type': 'bool', 'edit': False, 'maxsize': 10,
 			 'row': 1},
 			{'key': 'db_comment', 'title': u'Комм.', 'type': 'text', 'edit': False, 'maxsize': 20, 'row': 0},
@@ -93,7 +93,10 @@ class UIReestrElement(tk.Frame):
 					v = v.strftime("%d.%m.%Y")
 				c["widget"].insert("end", v)
 				#для реестра с уведомлением особое выделение
-				if (c["key"] in ['no-return', 'with-simple-notice']) and self.reestr_info[c["key"]]:
+				if (c["key"] == 'with-simple-notice') and self.reestr_info[c["key"]]:
+					c["widget"]["readonlybackground"] = "#FF0000"
+				#для реестра без галки "без возврата"
+				if (c["key"] == 'no-return') and not self.reestr_info[c["key"]]:
 					c["widget"]["readonlybackground"] = "#FF0000"
 			if not c["edit"]:
 				c["widget"].config(state='readonly')

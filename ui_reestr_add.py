@@ -22,6 +22,8 @@ class UIReestrAdd(tk.Frame):
              'row': 0},
             {'key': 'no-return', 'title': u'Без возврата', 'type': 'bool', 'edit': True, 'maxsize': 10,
              'row': 0},
+            {'key': 'mail-category', 'title': u'Простые(убрать [Без возврата]!)', 'type': 'bool', 'edit': True, 'maxsize': 10,
+             'row': 0},
             {'key': 'db_comment', 'title': u'Комм.', 'type': 'text', 'edit': True, 'maxsize': 20, 'row': 0},
             {'key': 'fio', 'title': u'ФИО', 'type': 'text', 'edit': False, 'maxsize': 20, 'row': 0},
         ]
@@ -36,6 +38,8 @@ class UIReestrAdd(tk.Frame):
                 c['widget'] = wgt
                 wgt.grid({"column": col, "row": 0, "sticky": "NSW"})
                 col += 1
+                if c['key']=='no-return':
+                    c['var'].set(1)
             else:
                 L1 = tk.Label(self, text = c['title'], width=-1)
                 L1.grid({"column":col, "row":0, "sticky":"NSW"})
@@ -73,6 +77,12 @@ class UIReestrAdd(tk.Frame):
                     except Exception as e:
                         v = False
                         #TODO: log
+                    #Категория РПО: SIMPLE, ORDERED
+                    if c['key'] == 'mail-category':
+                        if v:
+                            v = "SIMPLE"
+                        else:
+                            v = "ORDERED"
                 elif c['type']=='date':
                     try:
                         v = datetime.strptime(c['widget'].get(), "%d.%m.%Y")

@@ -38,7 +38,8 @@ class UIEditWindow(tk.Frame):
 							"db_user_id": self.user_ident.get_user_id(),
 							"db_reestr_id": self.reestr_info["db_reestr_id"],
 							"with-simple-notice": self.reestr_info["with-simple-notice"],
-							"no-return": self.reestr_info["no-return"]
+							"no-return": self.reestr_info["no-return"],
+							"mail-category": self.reestr_info["mail-category"],
 							},
 			action_callback=self.action_letter)
 		self.ui_add.config(bd=5, relief=tk.GROOVE)

@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from reportlab.graphics.barcode import common
 from reportlab.lib.units import mm
@@ -42,6 +42,7 @@ def render_DL(canv, letter_info, from_info):
 	from_addr = from_info["addr"]
 	from_index = from_info["index"]
 	from_fio = from_info["fio"]
+	no_return = "Возврату не подлежит" if letter_info["no-return"] else ""
 	dst_name = letter_info["recipient-name"]
 	dst_addr = ", ".join(map(lambda k: letter_info[k],
 		filter(lambda a: a in letter_info,["region-to", "area-to", "place-to", "location-to", "street-to", "hotel-to", "house-to", "slash-to", "letter-to", "building-to", "corpus-to", "room-to"])
@@ -53,6 +54,7 @@ def render_DL(canv, letter_info, from_info):
 		{"x":20,"y":85,"w":65,"h":15, "fontsize":10,"font":"TimesNewRoman","alignment":TA_LEFT,"text":from_addr},
 		{"x":55,"y":80,"w":30,"h":5, "fontsize":10,"font":"TimesNewRoman","alignment":TA_CENTER,"text":from_index},
 		{"x":20,"y":80,"w":30,"h":5, "fontsize":6,"font":"TimesNewRoman","alignment":TA_LEFT,"text":from_fio},
+		{"x":20,"y":70,"w":30,"h":7, "fontsize":8,"font":"TimesNewRoman","alignment":TA_LEFT,"text":no_return},
 		{"x":115,"y":50,"w":85,"h":15, "fontsize":10,"font":"TimesNewRoman","alignment":TA_LEFT,"text":dst_name},
 		{"x":115,"y":30,"w":85,"h":20, "fontsize":10,"font":"TimesNewRoman","alignment":TA_LEFT,"text":dst_addr},
 		{"x":105,"y":18,"w":30,"h":5, "fontsize":10,"font":"TimesNewRoman","alignment":TA_CENTER,"text":dst_index},
@@ -78,8 +80,9 @@ def render_DL(canv, letter_info, from_info):
 			standard_b64decode(_INDEX_IMAGES[ind]))),
 		(20+9*n)*mm, 10*mm)
 	#barcode
-	ift = common.I2of5(value = barcode, checksum=False, bearers=0, barWidth=0.35*mm, gap = 1*mm, barHeight=10*mm)
-	ift.drawOn(canv, 95*mm, 90*mm)
+	if barcode > "":
+		ift = common.I2of5(value = barcode, checksum=False, bearers=0, barWidth=0.35*mm, gap = 1*mm, barHeight=10*mm)
+		ift.drawOn(canv, 95*mm, 90*mm)
 
 #изображения цифр индекса в формате jpg (base64)
 _INDEX_IMAGES = {

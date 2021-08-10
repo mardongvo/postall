@@ -81,6 +81,12 @@ ERROR_PC = 100 + 0
 ERROR_DB = 100 + 1
 _ERR_404 = "HTTP code: 404" #
 
+def get_barcode(reply):
+        # reply - dict
+        if "barcode" in reply:
+                return reply["barcode"]
+        return ""
+
 def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 	""" Добавление письма в кабинете сначала в новые, а потом в пакет
 	
@@ -170,7 +176,7 @@ def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 				continue
 			#письмо найдено в пакете
 			if (err0 == _ERR_404) and (err1 == ""):
-				_letter["barcode"] = o1["barcode"]
+				_letter["barcode"] = get_barcode(o1)
 				_letter["db_locked"] = LOCK_STATE_BATCH
 				_state = STATE_SAVE
 				continue
@@ -218,7 +224,7 @@ def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 				_error = "barcode_add:(STATE_GET_INFO):get_backlog>>" + err
 				_state = ERROR_PC
 				continue
-			_letter["barcode"] = inf["barcode"]
+			_letter["barcode"] = get_barcode(inf)
 			_letter["db_locked"] = LOCK_STATE_BATCH
 			_state = STATE_SAVE
 			continue
