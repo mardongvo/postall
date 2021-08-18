@@ -26,6 +26,9 @@ class UIEditWindow(tk.Frame):
 		self.use_daemon = use_daemon
 		self.rowcount = 0
 		self.reestr_info = reestr_info
+		self.render_letters = render_DL_letters
+		if self.reestr_info["envelope-type"] == "C5":
+			self.render_letters = render_C5_letters
 		#
 		tk.Frame.__init__(self, master)
 		self.ui_ctl = UILetterControl(self, action_callback=self.action_letter)
@@ -33,14 +36,16 @@ class UIEditWindow(tk.Frame):
 		self.ui_ctl.pack(side=tk.TOP, fill=tk.X)
 		self.ui_add = UILetterAdd(self,
 			default_values={"db_mass_pages":1,
-							"mass":20,
-							"db_locked":LOCK_STATE_FREE,
-							"db_user_id": self.user_ident.get_user_id(),
-							"db_reestr_id": self.reestr_info["db_reestr_id"],
-							"with-simple-notice": self.reestr_info["with-simple-notice"],
-							"no-return": self.reestr_info["no-return"],
-							"mail-category": self.reestr_info["mail-category"],
-							},
+					"mass":20,
+					"db_locked":LOCK_STATE_FREE,
+					"db_user_id": self.user_ident.get_user_id(),
+					"db_reestr_id": self.reestr_info["db_reestr_id"],
+					"with-simple-notice": self.reestr_info["with-simple-notice"],
+					"no-return": self.reestr_info["no-return"],
+					"mail-category": self.reestr_info["mail-category"],
+					"envelope-type": self.reestr_info["envelope-type"],
+					"payment-method": self.reestr_info["payment-method"],
+					},
 			action_callback=self.action_letter)
 		self.ui_add.config(bd=5, relief=tk.GROOVE)
 		self.ui_add.pack(side=tk.TOP, fill=tk.X)
@@ -101,6 +106,7 @@ class UIEditWindow(tk.Frame):
 			if err > "":
 				logging.error(err)
 			from_info["fio"] = UserIdentifier(uinf).get_fio()
+			data["list-number-date"] = self.reestr_info["list-number-date"]
 			yield (data, from_info)
 	
 	def action_letter(self, command, letter_info, contagent_info={ }):
@@ -133,12 +139,12 @@ class UIEditWindow(tk.Frame):
 			if err > "":
 				logging.error(err)
 			from_info["fio"] = UserIdentifier(uinf).get_fio()
-			os.startfile(render_DL_letters([(letter_info,
-													 from_info)].__iter__()))
+			letter_info["list-number-date"] = self.reestr_info["list-number-date"]
+			os.startfile(self.render_letters([(letter_info, from_info)].__iter__()))
 		if command == "PRINT_ALL":
-			os.startfile(render_DL_letters(self.letter_iterator()))
+			os.startfile(self.render_letters(self.letter_iterator()))
 		if command == "PRINT_MY":
-			os.startfile(render_DL_letters(self.letter_iterator(
+			os.startfile(self.render_letters(self.letter_iterator(
 				self.user_ident.get_user_id())
 				)
 			)

@@ -32,6 +32,8 @@ class UIReestrElement(tk.Frame):
 			{'key': 'mail-category', 'title': u'Катег.', 'type': 'text', 'edit': False, 'maxsize': 10, 'row': 0},
 			{'key': 'no-return', 'title': u'Без возврата', 'type': 'bool', 'edit': False, 'maxsize': 10,
 			 'row': 1},
+			{'key': 'envelope-type', 'title': u'Конверт', 'type': 'text', 'edit': False, 'maxsize': 10, 'row': 0},
+			{'key': 'payment-method', 'title': u'Оплата', 'type': 'text', 'edit': False, 'maxsize': 10, 'row': 1},
 			{'key': 'db_comment', 'title': u'Комм.', 'type': 'text', 'edit': False, 'maxsize': 20, 'row': 0},
 			{'key': 'fio', 'title': u'ФИО', 'type': 'text', 'edit': False, 'maxsize': 20, 'row': 1},
 		]

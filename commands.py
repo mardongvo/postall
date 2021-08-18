@@ -81,11 +81,24 @@ ERROR_PC = 100 + 0
 ERROR_DB = 100 + 1
 _ERR_404 = "HTTP code: 404" #
 
-def get_barcode(reply):
-        # reply - dict
-        if "barcode" in reply:
-                return reply["barcode"]
-        return ""
+def get_deep_value(reply, default_value, *keys):
+        # get value from deep dictionary
+        sub = reply
+        for key in keys:
+                if not isinstance(sub, dict):
+                        return default_value
+                if key not in sub:
+                        return default_value
+                sub = sub[key]
+        return sub
+
+def fill_letter_from_reply(letter, reply):
+    letter["barcode"] = get_deep_value(reply, "", "barcode")
+    letter["opm_index_oper"] = get_deep_value(reply, "", "online-payment-mark", "index-oper")
+    letter["opm_id"]= get_deep_value(reply, "", "online-payment-mark", "online-payment-mark-id")
+    letter["opm_value"] = get_deep_value(reply, 0, "online-payment-mark", "value")
+    letter["total_rate_wo_vat"] = get_deep_value(reply, 0, "total-rate-wo-vat")
+    letter["total_vat"] = get_deep_value(reply, 0, "total-vat")
 
 def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 	""" Добавление письма в кабинете сначала в новые, а потом в пакет
@@ -176,7 +189,7 @@ def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 				continue
 			#письмо найдено в пакете
 			if (err0 == _ERR_404) and (err1 == ""):
-				_letter["barcode"] = get_barcode(o1)
+				fill_letter_from_reply(_letter, o1)
 				_letter["db_locked"] = LOCK_STATE_BATCH
 				_state = STATE_SAVE
 				continue
@@ -194,7 +207,9 @@ def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 				continue
 		########################
 		if _state == STATE_CREATE_BATCH:
-			batch_info, err = postconn.add_batch(_reestr["list-number-date"], [_letter["id"]])
+			batch_info, err = postconn.add_batch(_reestr["list-number-date"],
+						_letter["payment-method"] == "ONLINE_PAYMENT_MARK",
+						[_letter["id"]])
 			if err > "":
 				_error = "barcode_add:(STATE_CREATE_BATCH):add_batch>>" + err
 				_state = ERROR_PC
@@ -224,7 +239,7 @@ def barcode_add(dbstorage, postconn, reestr_info, letter_info):
 				_error = "barcode_add:(STATE_GET_INFO):get_backlog>>" + err
 				_state = ERROR_PC
 				continue
-			_letter["barcode"] = get_barcode(inf)
+			fill_letter_from_reply(_letter, inf)
 			_letter["db_locked"] = LOCK_STATE_BATCH
 			_state = STATE_SAVE
 			continue

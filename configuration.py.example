@@ -79,6 +79,11 @@ LETTER_DB_FIELDS = {
 	"db_user_id": "", #идентификатор пользователя
 	"db_locked": 0, #заблокировано для изменений, возможно только присвоение barcode или разблокировка при удалении с 
 	"db_last_error": "", #последняя ошибка
+    "opm_index_oper": "", #индекс ОПС приема ["online-payment-mark"]["index-oper"]
+    "opm_id": "", #Уникальный идентификатор ЗОО ["online-payment-mark"]["online-payment-mark-id"]
+    "opm_value": 0, #Цена за единицу товара в копейках (вкл. НДС) ["online-payment-mark"]["value"]
+    "total_rate_wo_vat": 0, #Плата всего без НДС (коп), total-rate-wo-vat
+    "total_vat": 0, #Всего НДС (коп)
 }
 
 #поля для реестра
@@ -93,6 +98,8 @@ REESTR_DB_FIELDS = {
     "db_locked": 0, #заблокировано для изменений
     "db_comment":"", #комментарий
     "db_letter_count": 0 #количество писем TODO: оставить или заменить динамикой?
+    "envelope-type": "", #DL, C5, Тип конверта - ГОСТ Р 51506-99. (Опционально), https://otpravka.pochta.ru/specification#/enums-base-envelope-type
+    "payment-method": "", #STAMP, ONLINE_PAYMENT_MARK Способ оплаты  (Опционально) CASHLESS,  STAMP, FRANKING
 }
 
 LETTER_KEY_FIELD = "db_letter_id"
@@ -127,6 +134,8 @@ FROM_INFO = {
 	"addr": "",  # адрес своей организации
 	"index": "",  # индекс адреса своей организации
 	"fio": "",  # ФИО ответственного
+	"inn":"", #ИНН своей организации, нужен для знаков онлайн оплаты
+	"kpp": "",  #КПП своей организации, нужен для знаков онлайн оплаты
 }
 
 #настройка на использование демона

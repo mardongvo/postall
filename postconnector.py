@@ -140,14 +140,17 @@ class PostConnector:
 			error += str(e)
 		return error
 		
-	def add_batch(self, send_date, backlog_ids):
+	def add_batch(self, send_date, use_online_balance, backlog_ids):
 		"""Создание партии из заказов
 		send_date -- Дата сдачи в почтовое отделение, объект datetime (yyyy-MM-dd)
+		use_online_balance -- boolean, Использование онлайн баланса (ЗОО)
 		backlog_ids -- массив идентификаторов заказов
 		"""
-		path = "/1.0/user/shipment"
+		path = "/1.0/user/shipment?"
 		if isinstance(send_date, datetime) or isinstance(send_date, date):
-			path = path + "?sending-date=" + send_date.strftime("%Y-%m-%d")
+			path = path + "sending-date=" + send_date.strftime("%Y-%m-%d")
+		if use_online_balance:
+			path = path + "&use-online-balance=true"
 		errors = {}
 		batch_info = {}
 		batch_name = None
