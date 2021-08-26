@@ -7,16 +7,17 @@ BG_COLOR = "FFFFFF"
 DEFAULT_WIDTH = 20
 ERROR_BG = "#d271ff"
 
-#цвета фона для различия позиций в списке
+# цвета фона для различия позиций в списке
 COLORS = (
     ("#cccdff", "#7e80c9"),
     ("#ffc9c9", "#c97e7e")
 )
 
+
 class UILetterView(tk.Frame):
     """UI класс представления письма в виде горизонтальной области в несколько строк
     """
-    
+
     def __init__(self, master, bgcolor=0, action_callback=None):
         self.GUI_DEF = [
             {'key': 'barcode', 'title': u'Номер', 'type': 'text', 'edit': False, 'maxsize': 14, 'row': 0},
@@ -36,19 +37,19 @@ class UILetterView(tk.Frame):
         ]
         self.letter_info = {}
         self.action_callback = action_callback
-        #create widgets
+        # create widgets
         tk.Frame.__init__(self, master)
         self["bg"] = COLORS[bgcolor][0]
-        #self.pack(fill="both", expand=True)
+        # self.pack(fill="both", expand=True)
         gridcol = {}
         for i in map(lambda a: a['row'], self.GUI_DEF):
             gridcol[i] = 2
         for c in self.GUI_DEF:
             col = gridcol[c['row']]
-            if c['key'] == 'barcode': #исключение для номера отправления
+            if c['key'] == 'barcode':  # исключение для номера отправления
                 col = 0
-            L1 = tk.Label(self, text = c['title'])
-            L1.grid({"column":col, "row":c['row'], "sticky":"NSW"})
+            L1 = tk.Label(self, text=c['title'])
+            L1.grid({"column": col, "row": c['row'], "sticky": "NSW"})
             L1["width"] = -1
             L1["bg"] = COLORS[bgcolor][0]
             ent = tk.Entry(self)
@@ -56,7 +57,7 @@ class UILetterView(tk.Frame):
             ent["readonlybackground"] = COLORS[bgcolor][1]
             if not c['edit']:
                 ent.config(state='readonly')
-            ent.grid({"column":col+1, "row":c['row'], "sticky":"NSW"})
+            ent.grid({"column": col + 1, "row": c['row'], "sticky": "NSW"})
             if 'maxsize' in c:
                 ent["width"] = c['maxsize']
             else:
@@ -64,13 +65,14 @@ class UILetterView(tk.Frame):
             c['widget'] = ent
             if c['key'] != 'barcode':
                 gridcol[c['row']] += 2
+
     def set_data(self, letter_info):
         """ Скопировать данные письма, заполнить entry
         """
         self.letter_info = copy.copy(letter_info)
         for c in self.GUI_DEF:
-            c["widget"].config(state='normal') #необходимо для редактирования
-            c["widget"].delete(0,"end")
+            c["widget"].config(state='normal')  # необходимо для редактирования
+            c["widget"].delete(0, "end")
             if c["key"] in self.letter_info:
                 v = self.letter_info[c["key"]]
                 if isinstance(v, int):

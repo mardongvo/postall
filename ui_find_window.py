@@ -2,22 +2,16 @@
 from __future__ import unicode_literals
 import Tkinter as tk
 from ui_scrollframe import UIScrollFrame
-#from ui_letter_add_custom import UILetterAdd
 from ui_letter_view import UILetterView
 from ui_find_control import UIFindControl
-from dbstorage import LOCK_STATE_FINAL, LOCK_STATE_FREE, LOCK_STATE_BACKLOG, LOCK_STATE_BATCH
-import commands
-import os
-from copy import copy
 import configuration as defconf
 import logging
 
-#FAIL POST
-import win32com.client
 
 class UIFindWindow(tk.Frame):
     """UI класс главное окно
     """
+
     def __init__(self, master, dbstorage):
         #
         self.dbstorage = dbstorage
@@ -30,6 +24,7 @@ class UIFindWindow(tk.Frame):
         self.ui_scrollarea = UIScrollFrame(self)
         self.ui_scrollarea.config(bd=5, relief=tk.GROOVE)
         self.ui_scrollarea.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
     def action_find(self, command, recipient_info):
         """ Callback функция для обработки действий в форме
         
@@ -41,7 +36,7 @@ class UIFindWindow(tk.Frame):
             self.ui_scrollarea.clear()
             lvinfo = self.dbstorage.find_letters(recipient_info)
             for data, err in lvinfo:
-                if err!="":
+                if err != "":
                     logging.error(err)
                     continue
                 uu = UILetterView(self.ui_scrollarea.frame, self.rowcount % 2, None)
