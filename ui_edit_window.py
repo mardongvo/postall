@@ -9,6 +9,7 @@ from dbstorage import LOCK_STATE_FINAL, LOCK_STATE_FREE, LOCK_STATE_BACKLOG, LOC
 from user_identifier import UserIdentifier
 from envelope_render import render_DL_letters
 from envelope_render_C5 import render_C5_letters
+from envelope_render_DLQR import render_DLQR_letters
 from notification_render import render_notifications
 import commands
 import os
@@ -31,6 +32,8 @@ class UIEditWindow(tk.Frame):
         self.render_letters = render_DL_letters
         if self.reestr_info["envelope-type"] == "C5":
             self.render_letters = render_C5_letters
+        if (self.reestr_info["envelope-type"] == "DL") and (self.reestr_info["payment-method"] == "ONLINE_PAYMENT_MARK"):
+            self.render_letters = render_DLQR_letters
         #
         tk.Frame.__init__(self, master)
         self.ui_ctl = UILetterControl(self, action_callback=self.action_letter)
