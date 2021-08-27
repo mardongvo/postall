@@ -35,3 +35,4 @@ class UILetterAdd(tk.Frame):
             letter_info = copy(self.default_values)
             contragent_info = {"srctype": 0, "srcid": self.entry_id.get()}
             self.action_callback("ADD", letter_info, contragent_info)
+            self.action_callback("REFRESH", {}, {})

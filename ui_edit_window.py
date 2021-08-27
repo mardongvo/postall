@@ -174,7 +174,6 @@ class UIEditWindow(tk.Frame):
             self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
             if err > "":
                 logging.error(err)
-            self.refresh()
         if command == "BARCODE_DEL":
             if self.use_daemon:
                 self.dbstorage.add_command({"command": "BARCODE_DEL", "db_reestr_id": letter_info["db_reestr_id"],
