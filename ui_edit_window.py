@@ -134,7 +134,6 @@ class UIEditWindow(tk.Frame):
                 for k, v in cinfo.iteritems():
                     letter_info[k] = v
             res = self.dbstorage.add_letter(letter_info)
-            self.refresh()
         if command == "SAVE":
             res, err = self.dbstorage.modify_letter(letter_info)
             if res:
@@ -174,6 +173,7 @@ class UIEditWindow(tk.Frame):
             self.reestr_info, err = self.dbstorage.get_reestr_info(self.reestr_info["db_reestr_id"])
             if err > "":
                 logging.error(err)
+            self.refresh()
         if command == "BARCODE_DEL":
             if self.use_daemon:
                 self.dbstorage.add_command({"command": "BARCODE_DEL", "db_reestr_id": letter_info["db_reestr_id"],
