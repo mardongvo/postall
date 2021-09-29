@@ -25,7 +25,7 @@ def sql_table(tablename, fields, alter=False):
     if alter:
         tmp = []
         for fld in fields:
-            tmp.append("alter table %s add column %s;" % (tablename, fld))
+            tmp.append("alter table %s add column if not exists %s;" % (tablename, fld))
         return "\n".join(tmp)+"\n"
     else:
         return "create table if not exists %s(\n" % (tablename,) + ", \n".join( fields ) + ");\n"
