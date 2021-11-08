@@ -287,6 +287,8 @@ def barcode_del(dbstorage, postconn, reestr_info, letter_info):
     if err > "":
         log.error("barcode_del:():get_reestr_info>>" + err)
         return
+    if _letter["db_locked"] == LOCK_STATE_FINAL:
+        return
     if _reestr["db_locked"] == LOCK_STATE_FINAL:
         return
     linf = {"db_letter_id": _letter["db_letter_id"],
