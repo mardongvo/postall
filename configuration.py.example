@@ -53,20 +53,20 @@ LETTER_DEFAULT = {
     "with-simple-notice": True, #Отметка 'С простым уведомлением' (Опционально)
     #"wo-mail-rank": true #Отметка 'Без разряда' (Опционально)
     "no-return": False, #Отметка "Возврату не подлежит" (Опционально)
+    "mail-category": "", #Категория РПО: SIMPLE, ORDERED, ORDINARY, WITH_DECLARED_VALUE, WITH_DECLARED_VALUE_AND_CASH_ON_DELIVERY, COMBINED, https://otpravka.pochta.ru/specification#/enums-base-mail-category
+    "envelope-type": "", #DL, C5, Тип конверта - ГОСТ Р 51506-99. (Опционально), https://otpravka.pochta.ru/specification#/enums-base-envelope-type
+    "payment-method": "", #STAMP, ONLINE_PAYMENT_MARK Способ оплаты  (Опционально) CASHLESS,  STAMP, FRANKING https://otpravka.pochta.ru/specification#/enums-payment-methods
 }
 
 #эти поля преполагаются постоянными и их хранение в базе не предполагется
 #можно переместить в струкруту выше
 LETTER_CONSTANT_FIELDS = {
     "address-type-to": "DEFAULT", #Тип адреса DEFAULT, PO_BOX, DEMAND
-    "envelope-type": "DL", #Тип конверта - ГОСТ Р 51506-99. (Опционально), https://otpravka.pochta.ru/specification#/enums-base-envelope-type
     "fragile": False, #Установлена ли отметка 'Осторожно/Хрупкое'?,  true или false
     "mail-direct": 643, #Код страны Россия: 643
     "mail-type": "LETTER", #Вид РПО. https://otpravka.pochta.ru/specification#/enums-base-mail-type
     "manual-address-input": True, #Отметка 'Ручной ввод адреса'  true или false
-    "payment-method": "STAMP", #Способ оплаты  (Опционально) CASHLESS,  STAMP, FRANKING https://otpravka.pochta.ru/specification#/enums-payment-methods
     "postoffice-code": "", #Индекс места приема (Опционально)
-    "mail-category": "ORDERED", #Категория РПО: SIMPLE, ORDERED, ORDINARY, WITH_DECLARED_VALUE, WITH_DECLARED_VALUE_AND_CASH_ON_DELIVERY, COMBINED, https://otpravka.pochta.ru/specification#/enums-base-mail-category
 }
 
 #дополнительные поля для БД
@@ -94,6 +94,7 @@ REESTR_DB_FIELDS = {
     "batch-name": "", #Номер партии
     "with-simple-notice": False, #Отметка 'С простым уведомлением' (Опционально)
     "no-return": False, #Отметка "Возврату не подлежит" (Опционально)
+    "mail-category": "", #Категория РПО: SIMPLE, ORDERED
     "db_user_id": "", #идентификатор пользователя
     "db_locked": 0, #заблокировано для изменений
     "db_comment":"", #комментарий
