@@ -53,7 +53,7 @@ def render_DLQR(canv, letter_info, from_info):
                              ))
     dst_index = "%06d" % letter_info["index-to"]
     mass = letter_info["mass"]
-    total_rate = letter_info["total-rate-wo-wat"] + letter_info["total-vat"]
+    total_rate = letter_info["total_rate_wo_vat"] + letter_info["total_vat"]
     rate_print = u"%d руб %02d коп" % (total_rate // 100, total_rate - (total_rate // 100) * 100)
 
     textlines = [
